@@ -1003,6 +1003,9 @@ export function GeneratorTab() {
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
+  const [showInspire, setShowInspire] = useState(false);
+  const [inspireSong, setInspireSong] = useState("");
+  const [inspireArtist, setInspireArtist] = useState("");
 
   const importJson = () => {
     setImportError("");
@@ -1044,6 +1047,61 @@ export function GeneratorTab() {
     }
   };
 
+  const generateInspirePrompt = () => {
+    const optionsJson = {
+      categories: categories.map((c) => c.id),
+      moods: moodOptions.map((m) => m.id),
+      tempos: tempoOptions.map((t) => t.id),
+      themes: allThemes,
+      artists: allArtists.map((a) => a.name),
+      instruments: Array.from(new Set(Object.values(instruments).flat())),
+      weirdness: [0, 10, 20, 30],
+    };
+
+    const prompt = `Ik ben Erik Lindeman, een Nederlandse country/Americana singer-songwriter. Ik wil een nummer maken geïnspireerd door "${inspireSong}" van ${inspireArtist || "onbekend"}.
+
+BELANGRIJK: Dit wordt GEEN cover of vertaling. Ik wil de SFEER, ENERGIE en THEMATIEK van dit nummer vertalen naar mijn eigen stijl en een compleet nieuw, origineel nummer.
+
+Analyseer het originele nummer op:
+- Mood/sfeer
+- Tempo en groove
+- Instrumentatie
+- Thematiek en emotie
+- Dynamische opbouw (stille vs luide momenten)
+- Wat maakt dit nummer speciaal/een hit?
+
+Vertaal dat dan naar keuzes uit MIJN generator. Kies ALLEEN uit deze exacte opties:
+
+${JSON.stringify(optionsJson, null, 2)}
+
+REGELS:
+- Geen IT/coder/developer referenties
+- Zangbereik A2-G4 (warme baritone)
+- Specifieke details > abstracte metaforen
+- Kwetsbaarheid + kracht = winnende combo
+- Vaderschap-thema's scoren het hoogst (7.9% save rate)
+
+Geef je antwoord als JSON in dit EXACTE format (ik importeer dit direct in mijn generator):
+
+{
+  "categories": ["kies_ids_hierboven"],
+  "moods": ["kies_moods_hierboven"],
+  "tempos": ["kies_tempos_hierboven"],
+  "themes": ["kies_themes_hierboven"],
+  "artists": ["kies_artists_hierboven"],
+  "instruments": ["kies_instruments_hierboven"],
+  "weirdness": 0,
+  "customTheme": "korte beschrijving van het thema in Erik's stijl",
+  "notes": "wat maakt dit nummer speciaal en hoe vertaalt dat naar Erik's sound"
+}
+
+Geef ALLEEN de JSON terug, geen uitleg.`;
+
+    navigator.clipboard.writeText(prompt);
+    setCopiedField("inspire");
+    setTimeout(() => setCopiedField(null), 3000);
+  };
+
   const clearAll = () => {
     setSelectedCategories([]);
     setSelectedMoods([]);
@@ -1078,6 +1136,14 @@ export function GeneratorTab() {
           Opgeslagen ({savedOutputs.length})
         </button>
         <div className="flex gap-2 ml-auto">
+          <button
+            onClick={() => setShowInspire(!showInspire)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showInspire ? "bg-purple-900/30 text-purple-400 border border-purple-900/50" : "bg-card text-muted hover:text-foreground border border-border"
+            }`}
+          >
+            Song Inspiratie
+          </button>
           <button
             onClick={clearAll}
             className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-card text-red-400 hover:bg-red-900/20 border border-border"
@@ -1133,6 +1199,61 @@ export function GeneratorTab() {
               Annuleer
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Song Inspiratie panel */}
+      {showInspire && (
+        <div className="bg-card border border-purple-900/50 rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-purple-400 mb-2">Song Inspiratie</h3>
+          <p className="text-xs text-muted mb-3">
+            Vul een nummer in dat je vet vindt. Er wordt een prompt gegenereerd die je in een andere chat plakt.
+            Die chat analyseert het nummer en geeft je een JSON terug die je kunt importeren in de generator.
+          </p>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-xs text-muted mb-1 block">Artiest</label>
+              <input
+                type="text"
+                value={inspireArtist}
+                onChange={(e) => setInspireArtist(e.target.value)}
+                placeholder="Bijv. Lange Frans"
+                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-purple-700"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted mb-1 block">Nummer</label>
+              <input
+                type="text"
+                value={inspireSong}
+                onChange={(e) => setInspireSong(e.target.value)}
+                placeholder="Bijv. Hallo"
+                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-purple-700"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={generateInspirePrompt}
+              disabled={!inspireSong.trim()}
+              className="px-4 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-400 font-medium rounded-lg border border-purple-900/50 transition-colors text-sm disabled:opacity-40"
+            >
+              {copiedField === "inspire" ? "Prompt gekopieerd!" : "Genereer & kopieer prompt"}
+            </button>
+            <button
+              onClick={() => setShowInspire(false)}
+              className="px-4 py-2 text-muted hover:text-foreground text-sm"
+            >
+              Annuleer
+            </button>
+          </div>
+          {copiedField === "inspire" && (
+            <div className="mt-3 bg-purple-950/20 border border-purple-900/30 rounded-lg p-3">
+              <p className="text-xs text-purple-300">
+                Prompt gekopieerd! Plak deze in ChatGPT, Gemini of Claude. Je krijgt een JSON terug die je via &quot;Importeer JSON&quot; kunt laden.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
