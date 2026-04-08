@@ -371,7 +371,7 @@ function buildSunoPrompt(config: {
   const primary = selectedCategories[0] || "emotional_ballad";
   if (primary === "emotional_ballad") {
     prompt += `[Stripped Acoustic Breakdown] [Soaring Final Chorus]\n`;
-    prompt += `[Mid-song Instrumental Interlude between 2nd Chorus and Bridge]\n`;
+    prompt += `[Short Instrumental Break between 2nd Chorus and Bridge]\n`;
     prompt += `[Gentle Acoustic Outro with Fiddle Fade]\n`;
   } else if (primary === "rebel_party") {
     prompt += `[Extended Instrumental Break - 16 bars] [Guitar Solo Section]\n`;
@@ -428,7 +428,10 @@ function buildSunoPrompt(config: {
     prompt += `[Country elements woven through rock foundation]\n`;
   }
 
-  prompt += `[Duration: ~4:00]\n`;
+  prompt += `[Duration: 3:00-4:30] [Maximum 5 minutes] [Keep it concise]\n`;
+  prompt += `[Short Instrumental Breaks - max 8 bars] [No Extended Solos]\n`;
+  prompt += `[Structure: Intro-V1-V2-PreC-Chorus-V3-PreC-Chorus-Bridge-FinalChorus-Outro]\n`;
+  prompt += `[Fade out before 4:30]\n`;
 
   // Weirdness
   if (weirdness > 0) {
@@ -482,9 +485,6 @@ function buildLyricTemplate(category: string): string {
 (Pattern: kwetsbaarheid + kracht)
 (End with a memorable, repeatable line)
 
-[Instrumental Break]
-[Pedal Steel + Fiddle - 8 bars]
-
 [Verse 3]
 (4-6 lines — new angle, deeper layer)
 
@@ -494,8 +494,8 @@ function buildLyricTemplate(category: string): string {
 [Chorus]
 (Repeat with slight lyrical variation)
 
-[Instrumental Interlude]
-[16-bar Acoustic Guitar + Slide Guitar + Fiddle Counter-melody]
+[Instrumental Break]
+[8-bar Pedal Steel + Fiddle + Acoustic Guitar]
 
 [Bridge]
 (3-4 lines — turning point, revelation, or reflection)
@@ -507,7 +507,7 @@ function buildLyricTemplate(category: string): string {
 (Swap a key word or line to show growth/resolution)
 
 [Outro]
-[10-bar Fingerpicked Guitar Outro] [Soft Fiddle Fade] [Piano Trail]`;
+[Short Fingerpicked Guitar Outro] [Soft Fiddle Fade]`;
   }
 
   if (category === "rebel_party") {
@@ -536,7 +536,7 @@ function buildLyricTemplate(category: string): string {
 (Repeat)
 
 [Instrumental Break]
-[16-bar Guitar Solo] [Fiddle/Slide Guitar Duel] [Stomp-Clap Build]
+[8-bar Guitar Solo] [Fiddle/Slide Guitar Duel] [Stomp-Clap Build]
 
 [Bridge]
 (4 lines — moment of realness beneath the bravado)
@@ -660,7 +660,7 @@ function buildLyricTemplate(category: string): string {
 (Repeat)
 
 [Instrumental Break]
-[16-bar Guitar Solo] [Southern Slide Guitar] [Hammond Organ Swells]
+[8-bar Guitar Solo] [Southern Slide Guitar] [Hammond Organ Swells]
 
 [Bridge]
 (3-4 lines — emotional contrast to the power)
