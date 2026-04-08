@@ -946,6 +946,45 @@ export function GeneratorTab() {
     } catch {}
   };
 
+  const exportOptionsJson = () => {
+    const json = {
+      _info: "Erik Lindeman — Lyric & Suno Master Generator — Alle beschikbare opties",
+      _instructions: "Kies uit onderstaande opties om een nieuwe song te configureren. Meerdere keuzes per categorie mogelijk. Geef je keuzes terug in hetzelfde format.",
+      categories: categories.map((c) => ({ id: c.id, label: c.label, description: c.description })),
+      moods: moodOptions.map((m) => ({ id: m.id, description: m.tooltip })),
+      tempos: tempoOptions.map((t) => ({ id: t.id, label: t.label, bpm: t.bpm, description: t.description, audience: t.audience, example: t.tooltip })),
+      themes: themeGroups.map((g) => ({ group: g.label, options: g.themes })),
+      artists: artistGroups.map((g) => ({ group: g.label, artists: g.artists.map((a) => ({ name: a.name, style: a.tooltip, suno_translation: a.suno })) })),
+      instruments_per_category: Object.fromEntries(
+        categories.map((c) => [c.label, instruments[c.id] || []])
+      ),
+      weirdness_options: weirdnessOptions.map((w) => ({ percentage: w.id, label: w.label, description: w.description })),
+      vocal_specs: { range: "A2-G4", type: "Baritone-Tenor", style: "Chest voice dominant, warm gritty country — Luke Combs / Kane Brown / Jordan Davis", constraints: "No falsetto, no belting above G4, must be singable live" },
+      songwriting_rules: {
+        highest_save_rates: "Vaderschap-thema's (gem. 7.9%)",
+        best_practice: "Specifieke details > abstracte metaforen ('muddy sneakers by the rug' > 'love wrapped up in pain')",
+        winning_pattern: "Kwetsbaarheid + kracht (begin met strijd, eindig met doorzetting)",
+        avoid: "Geen IT/coder/developer referenties",
+        party_songs: "Prima tussendoor maar niet als lead single",
+      },
+      catalog_stats: {
+        top_songs: [
+          { title: "Better Than Before", streams: "146K", save_rate: "4.89%" },
+          { title: "The Man They Think I Am", streams: "109K", save_rate: "4.06%" },
+          { title: "That Line", streams: "82K", save_rate: "3.99%" },
+          { title: "Wealthiest Man", streams: "12K", save_rate: "7.67%" },
+          { title: "Custody War", streams: "18K", save_rate: "5.71%" },
+        ],
+        monthly_listeners: "54K",
+        total_streams_2026: "304K",
+      },
+    };
+    const text = JSON.stringify(json, null, 2);
+    navigator.clipboard.writeText(text);
+    setCopiedField("export");
+    setTimeout(() => setCopiedField(null), 3000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Toggle between generator and saved */}
@@ -965,6 +1004,12 @@ export function GeneratorTab() {
           }`}
         >
           Opgeslagen ({savedOutputs.length})
+        </button>
+        <button
+          onClick={exportOptionsJson}
+          className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-card text-muted hover:text-foreground border border-border ml-auto"
+        >
+          {copiedField === "export" ? "JSON gekopieerd!" : "Exporteer alle opties (JSON)"}
         </button>
       </div>
 
