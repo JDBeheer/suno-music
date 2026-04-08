@@ -1044,6 +1044,19 @@ export function GeneratorTab() {
     }
   };
 
+  const clearAll = () => {
+    setSelectedCategories([]);
+    setSelectedMoods([]);
+    setSelectedTempos([]);
+    setSelectedInstruments([]);
+    setSelectedThemes([]);
+    setSelectedArtists([]);
+    setCustomTheme("");
+    setCustomNotes("");
+    setWeirdness(0);
+    setShowOutput(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Toggle between generator, saved, import */}
@@ -1065,6 +1078,12 @@ export function GeneratorTab() {
           Opgeslagen ({savedOutputs.length})
         </button>
         <div className="flex gap-2 ml-auto">
+          <button
+            onClick={clearAll}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-card text-red-400 hover:bg-red-900/20 border border-border"
+          >
+            Clear all
+          </button>
           <button
             onClick={() => setShowImport(!showImport)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
