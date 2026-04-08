@@ -929,9 +929,9 @@ export function GeneratorTab() {
     loadSavedOutputs();
   };
 
-  const loadConfig = (configJson: string) => {
+  const loadConfig = (configJson: string | object) => {
     try {
-      const config = JSON.parse(configJson);
+      const config = typeof configJson === "string" ? JSON.parse(configJson) : configJson;
       setSelectedCategories(config.selectedCategories || []);
       setSelectedMoods(config.selectedMoods || []);
       setSelectedTempos(config.selectedTempos || []);
@@ -941,9 +941,11 @@ export function GeneratorTab() {
       setCustomNotes(config.customNotes || "");
       setWeirdness(config.weirdness || 0);
       setSelectedArtists(config.selectedArtists || []);
-      setShowOutput(true);
+      setShowOutput(false);
       setShowSaved(false);
-    } catch {}
+    } catch (e) {
+      console.error("loadConfig error:", e);
+    }
   };
 
   const exportOptionsJson = () => {
@@ -1134,7 +1136,7 @@ export function GeneratorTab() {
                       onClick={() => loadConfig(output.config_json)}
                       className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
                     >
-                      Optimaliseer
+                      Laad config
                     </button>
                     <button
                       onClick={() => copyToClipboard(output.suno_prompt, `saved-${output.id}`)}
