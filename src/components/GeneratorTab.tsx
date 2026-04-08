@@ -1100,21 +1100,21 @@ export function GeneratorTab() {
             <section className="bg-card border border-border rounded-lg p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-accent-light">Mood</h3>
-                <span className="text-xs text-muted">meerdere mogelijk — hover voor uitleg</span>
+                <span className="text-xs text-muted">meerdere mogelijk</span>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {moodOptions.map((mood) => (
                   <button
                     key={mood.id}
                     onClick={() => setSelectedMoods(toggle(selectedMoods, mood.id))}
-                    title={mood.tooltip}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    className={`p-2 rounded-lg border text-left transition-all ${
                       selectedMoods.includes(mood.id)
-                        ? "bg-accent text-white"
-                        : "bg-border text-muted hover:text-foreground"
+                        ? "border-accent bg-accent/10"
+                        : "border-border/50 hover:bg-card-hover"
                     }`}
                   >
-                    {mood.id}
+                    <p className={`text-xs font-medium ${selectedMoods.includes(mood.id) ? "text-accent-light" : "text-foreground"}`}>{mood.id}</p>
+                    <p className="text-[10px] text-muted mt-0.5">{mood.tooltip}</p>
                   </button>
                 ))}
               </div>
