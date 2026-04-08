@@ -17,10 +17,65 @@ const categories = [
   { id: "country_blues", label: "Country Blues", description: "Blues roots, slide guitar, soulful storytelling" },
   { id: "red_dirt", label: "Red Dirt / Texas Country", description: "Ruig, onafhankelijk, outlaw Americana" },
   { id: "country_metal", label: "Country Metal", description: "Heavy riffs, distortion, Frozen Steam-stijl" },
+  { id: "nu_metal_country", label: "Nu-Metal Country", description: "Limp Bizkit/Linkin Park meets country — rap-rock, DJ, screams" },
+  { id: "industrial_country", label: "Industrial Country", description: "Zware synths, industrial beats, donker en agressief" },
+  { id: "alt_rock_country", label: "Alt-Rock Country", description: "Alternative rock met country twang, emotioneel en heavy" },
   { id: "country_soul", label: "Country Soul / R&B", description: "Smooth vocals, gospel invloeden, warm" },
   { id: "comedy_country", label: "Comedy Country", description: "Humor, zelfspot, tongue-in-cheek storytelling" },
   { id: "acoustic_stripped", label: "Stripped / Acoustic", description: "Minimaal, puur, stem + gitaar" },
 ];
+
+// Artist inspiratie — vertaald naar Suno-vriendelijke beschrijvingen
+const artistGroups = [
+  {
+    label: "Country & Americana",
+    artists: [
+      { name: "Chris Stapleton", suno: "soulful country-blues, raw whiskey-soaked male vocals, blues-rock guitar, gritty Americana", tooltip: "Rauwe soul-country, blues invloeden" },
+      { name: "Zach Bryan", suno: "raw folk-country, emotional storytelling, lo-fi acoustic production, heartland rock", tooltip: "Rauwe folk, emotioneel, lo-fi" },
+      { name: "Luke Combs", suno: "warm baritone country, everyman storytelling, beer-drinking anthems, modern traditional", tooltip: "Warme stem, herkenbare verhalen" },
+      { name: "Morgan Wallen", suno: "modern country with melodic hooks, southern charm, party country vibes", tooltip: "Moderne country, catchy hooks" },
+      { name: "Kane Brown", suno: "country-pop crossover, smooth R&B influenced vocals, modern pop-country production", tooltip: "Country-pop, R&B invloeden" },
+      { name: "Jordan Davis", suno: "laid-back modern country, warm male vocals, feel-good storytelling, mid-tempo groove", tooltip: "Relaxte country, feel-good" },
+      { name: "Hardy", suno: "country-rock with hard edge, aggressive male vocals, heavy guitar-driven country", tooltip: "Harde country-rock, agressief" },
+      { name: "Jelly Roll", suno: "country-rap, emotional storytelling, redemption themes, rough-edged vocals", tooltip: "Country-rap, emotioneel, redemptie" },
+      { name: "Tyler Childers", suno: "Appalachian country, bluegrass-influenced, raw authentic vocals, fiddle-driven", tooltip: "Authentieke Appalachian country" },
+      { name: "Cody Jinks", suno: "traditional outlaw country, deep baritone, honky-tonk storytelling, no-frills production", tooltip: "Traditionele outlaw country" },
+      { name: "Johnny Cash", suno: "deep bass outlaw country, boom-chicka-boom rhythm, dark storytelling, acoustic simplicity", tooltip: "De godfather van outlaw country" },
+      { name: "Hank Williams Jr", suno: "rowdy southern rock-country, outlaw attitude, heavy guitar, party anthems", tooltip: "Rowdy southern rock meets country" },
+      { name: "Sturgill Simpson", suno: "psychedelic country-rock, genre-bending Americana, progressive country, synth layers", tooltip: "Psychedelische progressive country" },
+    ],
+  },
+  {
+    label: "Rock & Metal",
+    artists: [
+      { name: "Linkin Park", suno: "alternative rock with electronic elements, emotional screaming and melodic choruses, heavy guitar riffs with synthesizer layers, rap-rock verses", tooltip: "Alt-rock, elektronisch, schreeuwen + melodie" },
+      { name: "Limp Bizkit", suno: "nu-metal rap-rock, aggressive groove metal, DJ scratches and turntables, rap verses over heavy guitar riffs, bouncy aggressive energy", tooltip: "Nu-metal rap-rock, agressieve groove" },
+      { name: "Rammstein", suno: "German industrial metal, heavy electronic percussion, aggressive deep male vocals, dark theatrical production, pounding rhythms", tooltip: "Industrial metal, theatraal, zwaar" },
+      { name: "Metallica", suno: "thrash metal, complex guitar arrangements, powerful palm-muted riffs, epic song structures, dual guitar harmonies", tooltip: "Thrash metal, epische riffs" },
+      { name: "Five Finger Death Punch", suno: "heavy metal with melodic choruses, aggressive verse vocals, military-inspired themes, powerful breakdowns", tooltip: "Heavy metal, melodieuze refreinen" },
+      { name: "Volbeat", suno: "heavy metal with rockabilly and country influences, melodic metal, Elvis-inspired vocals over heavy riffs", tooltip: "Metal met rockabilly/country twist" },
+      { name: "Nickelback", suno: "post-grunge rock, anthemic choruses, heavy guitar riffs, emotional male vocals, arena rock production", tooltip: "Post-grunge, anthemische refreinen" },
+      { name: "Breaking Benjamin", suno: "alternative metal, dark atmospheric rock, emotional male vocals alternating with heavy screams, cinematic production", tooltip: "Alternatieve metal, cinematisch" },
+      { name: "Disturbed", suno: "heavy metal with powerful dramatic vocals, aggressive down-tuned guitars, intense building dynamics", tooltip: "Heavy metal, dramatische vocals" },
+      { name: "Shinedown", suno: "hard rock with emotional depth, powerful male vocals, anthemic arena rock, dynamic loud-quiet contrast", tooltip: "Hard rock, emotioneel, arena-waardig" },
+      { name: "Godsmack", suno: "groove metal, tribal percussion, heavy down-tuned riffs, aggressive male vocals", tooltip: "Groove metal, tribal drums" },
+      { name: "Avenged Sevenfold", suno: "metalcore meets classic metal, virtuoso guitar solos, dramatic compositions, operatic metal vocals", tooltip: "Metalcore, virtuoze gitaar" },
+    ],
+  },
+  {
+    label: "Crossover & Fusion",
+    artists: [
+      { name: "Post Malone", suno: "genre-blending, melodic rap-singing, emotional pop-rock with hip-hop beats, atmospheric production", tooltip: "Genre-blending, melodisch, emotioneel" },
+      { name: "Redferrin", suno: "country-trap fusion, smooth R&B vocals over southern rap energy, modern country-rap blend", tooltip: "Country-trap, R&B meets country" },
+      { name: "Upchurch", suno: "country-rap, redneck hip-hop, southern rock with rap verses, outlaw party energy", tooltip: "Country-rap, redneck hip-hop" },
+      { name: "Struggle Jennings", suno: "outlaw country-rap, dark storytelling, gritty vocals, southern hip-hop with country soul", tooltip: "Outlaw country-rap, donker" },
+      { name: "Whiskey Myers", suno: "southern rock Americana, heavy blues-influenced guitars, gritty vocals, Texas rock energy", tooltip: "Southern rock, Texas blues" },
+      { name: "Blackberry Smoke", suno: "southern rock with country heart, jam band elements, classic rock guitar tones, warm harmonies", tooltip: "Southern rock, jam band vibes" },
+    ],
+  },
+];
+
+const allArtists = artistGroups.flatMap((g) => g.artists);
 
 const moodOptions = [
   { id: "Emotional", tooltip: "Diep gevoel, raakt je in het hart" },
@@ -123,6 +178,22 @@ const instruments: Record<string, string[]> = {
     "Distorted Electric Guitar", "Double Kick Drums", "Bass Guitar (Drop Tuning)",
     "Banjo (Distorted)", "Fiddle Screech", "Slide Guitar (Heavy)",
     "Power Chords", "Breakdown Section",
+  ],
+  nu_metal_country: [
+    "Down-tuned Guitar Riffs", "DJ Scratches", "Turntable Effects",
+    "Rap Verses", "Heavy Bass Drop", "Electronic Percussion",
+    "Distorted Banjo", "Country Twang Guitar (Clean)", "Screamed Vocals Section",
+    "Double Kick Drums", "Wah Pedal Guitar", "808 Sub Bass",
+  ],
+  industrial_country: [
+    "Industrial Synth Bass", "Electronic Percussion", "Distorted Guitar Wall",
+    "Dark Ambient Pads", "Pounding Four-on-Floor Kick", "Slide Guitar (Processed)",
+    "Banjo (Through Distortion)", "Heavy Reverb Vocals", "Noise Textures",
+  ],
+  alt_rock_country: [
+    "Overdriven Electric Guitar", "Dynamic Drums (Quiet-Loud)", "Pedal Steel (Atmospheric)",
+    "Bass Guitar", "Fiddle (Ethereal)", "Piano (Dark Chords)",
+    "Reverb-Heavy Production", "Guitar Feedback", "Banjo Accents",
   ],
   country_soul: [
     "Warm Piano", "Hammond B3 Organ", "Gospel Choir Backing",
@@ -244,13 +315,14 @@ function buildSunoPrompt(config: {
   selectedTempos: string[];
   selectedInstruments: string[];
   selectedThemes: string[];
+  selectedArtists: string[];
   customTheme: string;
   avoided: string[];
   kept: string[];
   customNotes: string;
   weirdness: number;
 }): string {
-  const { selectedCategories, selectedMoods, selectedTempos, selectedInstruments, selectedThemes, customTheme, avoided, kept, customNotes, weirdness } = config;
+  const { selectedCategories, selectedMoods, selectedTempos, selectedInstruments, selectedThemes, selectedArtists, customTheme, avoided, kept, customNotes, weirdness } = config;
 
   const catLabels = selectedCategories.map(
     (id) => categories.find((c) => c.id === id)?.label || id
@@ -274,6 +346,16 @@ function buildSunoPrompt(config: {
   // Instruments
   if (selectedInstruments.length > 0) {
     prompt += `[Instruments: ${selectedInstruments.join(", ")}]\n`;
+  }
+
+  // Artist inspiration (translated to Suno-safe descriptions)
+  if (selectedArtists.length > 0) {
+    const artistDescriptions = selectedArtists
+      .map((name) => allArtists.find((a) => a.name === name)?.suno)
+      .filter(Boolean);
+    if (artistDescriptions.length > 0) {
+      prompt += `[Inspired by: ${artistDescriptions.join("; ")}]\n`;
+    }
   }
 
   // Vocal specs — Luke Combs / Kane Brown / Jordan Davis range
@@ -331,6 +413,19 @@ function buildSunoPrompt(config: {
   } else if (primary === "acoustic_stripped") {
     prompt += `[Minimal Production] [Voice + Guitar Focus] [Room Ambience]\n`;
     prompt += `[No Drums First Half] [Gentle Build]\n`;
+  } else if (primary === "nu_metal_country") {
+    prompt += `[Nu-metal rap-rock with country elements] [Down-tuned heavy guitar riffs]\n`;
+    prompt += `[Rap verses over heavy instrumentals] [Melodic chorus contrast]\n`;
+    prompt += `[DJ scratches and electronic elements] [Country twang guitar breaks]\n`;
+    prompt += `[Aggressive energy with southern soul]\n`;
+  } else if (primary === "industrial_country") {
+    prompt += `[Industrial electronic beats with country storytelling]\n`;
+    prompt += `[Heavy synthesizer bass] [Pounding mechanical rhythms]\n`;
+    prompt += `[Dark atmospheric production] [Processed slide guitar]\n`;
+  } else if (primary === "alt_rock_country") {
+    prompt += `[Alternative rock dynamics - quiet verses, loud choruses]\n`;
+    prompt += `[Atmospheric guitar layers] [Emotional vocal delivery]\n`;
+    prompt += `[Country elements woven through rock foundation]\n`;
   }
 
   prompt += `[Duration: ~4:00]\n`;
@@ -578,6 +673,131 @@ function buildLyricTemplate(category: string): string {
 [Guitar Solo Fade] [Feedback Trail] [Final Power Chord]`;
   }
 
+  if (category === "nu_metal_country") {
+    return `[Intro]
+[Heavy Down-tuned Guitar Riff] [Electronic Percussion] [Building Tension]
+
+[Verse 1]
+[Rap Flow over Heavy Guitars]
+(6-8 lines — aggressive, rhythmic, storytelling with attitude)
+(Country imagery meets street energy)
+
+[Pre-Chorus]
+[Melodic Transition] [Building to Explosion]
+(2-3 lines — tension before the drop)
+
+[Chorus]
+[Screamed/Sung Melodic Chorus] [Full Band Assault] [Country Twang Guitar Accent]
+(4-6 lines — anthemic, singable despite the heaviness)
+(The country melody shining through the metal)
+
+[Verse 2]
+[Harder Rap Flow] [DJ Scratches] [Distorted Banjo Accent]
+(6-8 lines — escalate the energy)
+
+[Pre-Chorus]
+(2-3 lines — variation, more intense)
+
+[Chorus]
+(Repeat with added aggression)
+
+[Breakdown]
+[Half-time Breakdown] [Muted Guitars] [Country Slide Guitar over Metal Chug]
+(4 lines — the heaviest moment, crowd participation)
+
+[Bridge]
+[Stripped to Acoustic Country] [Emotional Contrast]
+(3-4 lines — sudden quiet, vulnerability)
+(The country heart of the song exposed)
+
+[Final Chorus]
+[Maximum Intensity] [All Elements Combined]
+(Everything at once — metal power with country soul)
+
+[Outro]
+[Feedback] [Final Power Chord] [Country Guitar Lick Fade]`;
+  }
+
+  if (category === "industrial_country") {
+    return `[Intro]
+[Industrial Synth Pulse] [Mechanical Beat Building] [Dark Atmosphere]
+
+[Verse 1]
+[Spoken/Sung over Industrial Beat]
+(4-6 lines — dark, brooding storytelling)
+(Processed vocals, mechanical feel)
+
+[Pre-Chorus]
+[Building Electronic Layers]
+(2-3 lines — tension escalation)
+
+[Chorus]
+[Full Industrial Power] [Melodic Country Vocal over Electronic Assault]
+(4-6 lines — the human element fighting through the machine)
+
+[Instrumental Break]
+[Industrial Beat + Processed Slide Guitar - 8 bars]
+
+[Verse 2]
+(4-6 lines — deeper into darkness)
+
+[Chorus]
+(Repeat with more intensity)
+
+[Bridge]
+[Stripped to Distorted Banjo + Vocal] [Raw Country Moment]
+(3-4 lines — the soul beneath the industrial shell)
+
+[Final Chorus]
+[Everything Combined] [Maximum Wall of Sound]
+
+[Outro]
+[Industrial Beat Decay] [Single Country Guitar Note Sustain]`;
+  }
+
+  if (category === "alt_rock_country") {
+    return `[Intro]
+[Atmospheric Guitar Layers] [Soft Drums] [Pedal Steel Undertone]
+
+[Verse 1]
+[Quiet, Intimate Delivery]
+(4-6 lines — whispered intensity, building slowly)
+
+[Verse 2]
+[Slightly Louder, More Drive]
+(4-6 lines — tension building)
+
+[Pre-Chorus]
+[Dynamic Build]
+(2-3 lines — the wave rising)
+
+[Chorus]
+[LOUD] [Full Distortion + Country Fiddle] [Emotional Explosion]
+(6-8 lines — quiet-loud contrast, raw emotion)
+
+[Verse 3]
+[Back to Quiet] [Just Voice + Clean Guitar]
+(4-6 lines — reset for next wave)
+
+[Pre-Chorus]
+(2-3 lines)
+
+[Chorus]
+[Even Louder Than Before]
+(Repeat with more layers)
+
+[Bridge]
+[Atmospheric] [Reverb-Heavy] [Ethereal Fiddle]
+(3-4 lines — floating, dreamlike)
+
+[Final Chorus]
+[Maximum Dynamic] [Everything Cranked] [Pedal Steel Screaming]
+(The biggest moment — all walls of sound)
+
+[Outro]
+[Slow Fade to Acoustic] [Single Guitar Note] [Silence]`;
+  }
+
   // country_pop
   return `[Intro]
 [4-bar Clean Guitar + Light Drums] [Bright, Radio-Ready Feel]
@@ -621,6 +841,8 @@ export function GeneratorTab() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(["emotional_ballad"]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>(["Emotional", "Hopeful"]);
   const [selectedTempos, setSelectedTempos] = useState<string[]>(["slow_country"]);
+  const [selectedArtists, setSelectedArtists] = useState<string[]>([]);
+  const [expandedArtistGroup, setExpandedArtistGroup] = useState<string | null>(null);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
   const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
   const [customTheme, setCustomTheme] = useState("");
@@ -667,6 +889,7 @@ export function GeneratorTab() {
     selectedTempos,
     selectedInstruments,
     selectedThemes,
+    selectedArtists,
     customTheme,
     avoided,
     kept,
@@ -717,6 +940,7 @@ export function GeneratorTab() {
       setCustomTheme(config.customTheme || "");
       setCustomNotes(config.customNotes || "");
       setWeirdness(config.weirdness || 0);
+      setSelectedArtists(config.selectedArtists || []);
       setShowOutput(true);
       setShowSaved(false);
     } catch {}
@@ -904,6 +1128,66 @@ export function GeneratorTab() {
                   </button>
                 ))}
               </div>
+            </section>
+
+            {/* Artist Inspiratie */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-accent-light">Artist Inspiratie</h3>
+                <span className="text-xs text-muted">{selectedArtists.length} geselecteerd — wordt Suno-safe vertaald</span>
+              </div>
+              <div className="space-y-2 mb-3">
+                {artistGroups.map((group) => (
+                  <div key={group.label}>
+                    <button
+                      onClick={() => setExpandedArtistGroup(expandedArtistGroup === group.label ? null : group.label)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-background border border-border hover:bg-card-hover transition-colors"
+                    >
+                      <span className="text-xs font-medium text-foreground">{group.label}</span>
+                      <div className="flex items-center gap-2">
+                        {group.artists.filter((a) => selectedArtists.includes(a.name)).length > 0 && (
+                          <span className="text-xs text-accent-light">
+                            {group.artists.filter((a) => selectedArtists.includes(a.name)).length}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted">
+                          {expandedArtistGroup === group.label ? "\u25B2" : "\u25BC"}
+                        </span>
+                      </div>
+                    </button>
+                    {expandedArtistGroup === group.label && (
+                      <div className="grid grid-cols-2 gap-1.5 mt-2 ml-2">
+                        {group.artists.map((artist) => (
+                          <button
+                            key={artist.name}
+                            onClick={() => setSelectedArtists(toggle(selectedArtists, artist.name))}
+                            title={`Suno: ${artist.suno}`}
+                            className={`p-2 rounded-lg border text-left transition-all ${
+                              selectedArtists.includes(artist.name)
+                                ? "border-accent bg-accent/10"
+                                : "border-border/50 hover:bg-card-hover"
+                            }`}
+                          >
+                            <p className="text-xs font-medium text-foreground">{artist.name}</p>
+                            <p className="text-[10px] text-muted mt-0.5">{artist.tooltip}</p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {selectedArtists.length > 0 && (
+                <div className="bg-background rounded-lg p-3 border border-border">
+                  <p className="text-[10px] text-muted mb-1 font-medium">Suno vertaling:</p>
+                  <p className="text-[10px] text-accent/80 italic">
+                    {selectedArtists
+                      .map((name) => allArtists.find((a) => a.name === name)?.suno)
+                      .filter(Boolean)
+                      .join("; ")}
+                  </p>
+                </div>
+              )}
             </section>
 
             {/* Tempo - with audience info */}
