@@ -949,7 +949,7 @@ export function GeneratorTab() {
   const exportOptionsJson = () => {
     const json = {
       _info: "Erik Lindeman — Lyric & Suno Master Generator — Alle beschikbare opties",
-      _instructions: "Kies uit onderstaande opties om een nieuwe song te configureren. Meerdere keuzes per categorie mogelijk. Geef je keuzes terug in hetzelfde format.",
+      _instructions: "Kies uit onderstaande opties om een nieuwe song te configureren. Meerdere keuzes per categorie mogelijk. Geef je keuzes terug als JSON in dit format: {\"categories\": [\"id1\"], \"moods\": [\"Mood1\"], \"tempos\": [\"id1\"], \"themes\": [\"thema tekst\"], \"artists\": [\"Artist Name\"], \"instruments\": [\"Instrument\"], \"weirdness\": 0, \"customTheme\": \"\", \"notes\": \"extra context\"}",
       categories: categories.map((c) => ({ id: c.id, label: c.label, description: c.description })),
       moods: moodOptions.map((m) => ({ id: m.id, description: m.tooltip })),
       tempos: tempoOptions.map((t) => ({ id: t.id, label: t.label, bpm: t.bpm, description: t.description, audience: t.audience, example: t.tooltip })),
@@ -985,9 +985,53 @@ export function GeneratorTab() {
     setTimeout(() => setCopiedField(null), 3000);
   };
 
+  const [showImport, setShowImport] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState("");
+
+  const importJson = () => {
+    setImportError("");
+    try {
+      const data = JSON.parse(importText);
+
+      // Support both direct config format and the "choices" wrapper format
+      const config = data.choices || data.config || data;
+
+      if (config.categories || config.selectedCategories) {
+        setSelectedCategories(config.categories || config.selectedCategories || []);
+      }
+      if (config.moods || config.selectedMoods) {
+        setSelectedMoods(config.moods || config.selectedMoods || []);
+      }
+      if (config.tempos || config.selectedTempos) {
+        setSelectedTempos(config.tempos || config.selectedTempos || []);
+      }
+      if (config.instruments || config.selectedInstruments) {
+        setSelectedInstruments(config.instruments || config.selectedInstruments || []);
+      }
+      if (config.themes || config.selectedThemes) {
+        setSelectedThemes(config.themes || config.selectedThemes || []);
+      }
+      if (config.artists || config.selectedArtists) {
+        setSelectedArtists(config.artists || config.selectedArtists || []);
+      }
+      if (config.customTheme) setCustomTheme(config.customTheme);
+      if (config.customNotes || config.notes || config.extra) {
+        setCustomNotes(config.customNotes || config.notes || config.extra || "");
+      }
+      if (config.weirdness !== undefined) setWeirdness(config.weirdness);
+
+      setShowImport(false);
+      setImportText("");
+      setShowOutput(true);
+    } catch {
+      setImportError("Ongeldige JSON. Plak de output van je andere chat hier.");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Toggle between generator and saved */}
+      {/* Toggle between generator, saved, import */}
       <div className="flex gap-2">
         <button
           onClick={() => setShowSaved(false)}
@@ -1005,13 +1049,58 @@ export function GeneratorTab() {
         >
           Opgeslagen ({savedOutputs.length})
         </button>
-        <button
-          onClick={exportOptionsJson}
-          className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-card text-muted hover:text-foreground border border-border ml-auto"
-        >
-          {copiedField === "export" ? "JSON gekopieerd!" : "Exporteer alle opties (JSON)"}
-        </button>
+        <div className="flex gap-2 ml-auto">
+          <button
+            onClick={() => setShowImport(!showImport)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showImport ? "bg-green-900/30 text-green-400 border border-green-900/50" : "bg-card text-muted hover:text-foreground border border-border"
+            }`}
+          >
+            Importeer JSON
+          </button>
+          <button
+            onClick={exportOptionsJson}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-card text-muted hover:text-foreground border border-border"
+          >
+            {copiedField === "export" ? "JSON gekopieerd!" : "Exporteer opties"}
+          </button>
+        </div>
       </div>
+
+      {/* Import panel */}
+      {showImport && (
+        <div className="bg-card border border-green-900/50 rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-green-400 mb-2">Importeer song configuratie</h3>
+          <p className="text-xs text-muted mb-3">
+            Plak de JSON van je andere chat hieronder. Ondersteunt formats als:<br />
+            <code className="text-[10px] text-accent/70">{`{"categories": [...], "moods": [...], "tempos": [...], "artists": [...], ...}`}</code>
+          </p>
+          <textarea
+            value={importText}
+            onChange={(e) => { setImportText(e.target.value); setImportError(""); }}
+            placeholder='Plak JSON hier...'
+            rows={8}
+            className="w-full bg-background border border-border rounded-lg px-4 py-2 text-xs text-foreground placeholder-muted focus:outline-none focus:border-green-700 resize-none font-mono"
+          />
+          {importError && (
+            <p className="text-xs text-red-400 mt-2">{importError}</p>
+          )}
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={importJson}
+              className="px-4 py-2 bg-green-900/30 hover:bg-green-900/50 text-green-400 font-medium rounded-lg border border-green-900/50 transition-colors text-sm"
+            >
+              Importeer &amp; genereer
+            </button>
+            <button
+              onClick={() => { setShowImport(false); setImportText(""); setImportError(""); }}
+              className="px-4 py-2 text-muted hover:text-foreground text-sm"
+            >
+              Annuleer
+            </button>
+          </div>
+        </div>
+      )}
 
       {showSaved ? (
         /* Saved outputs view */
