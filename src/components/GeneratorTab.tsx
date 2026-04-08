@@ -358,9 +358,9 @@ function buildSunoPrompt(config: {
     }
   }
 
-  // Vocal specs — Luke Combs / Kane Brown / Jordan Davis range
+  // Vocal specs — comfortable male baritone-tenor range, no artist names (Suno blocks them)
   prompt += `[Vocal Range: A2-G4] [Male Voice Only] [Baritone-Tenor] [Chest Voice Dominant]\n`;
-  prompt += `[Vocal Style: Warm, gritty country tone — think Luke Combs meets Kane Brown]\n`;
+  prompt += `[Vocal Style: Warm, gritty country baritone, deep chest voice, southern storytelling tone]\n`;
   prompt += `[No Falsetto] [No High Belting Above G4] [Comfortable Male Range]\n`;
 
   // Production
@@ -961,7 +961,7 @@ export function GeneratorTab() {
         categories.map((c) => [c.label, instruments[c.id] || []])
       ),
       weirdness_options: weirdnessOptions.map((w) => ({ percentage: w.id, label: w.label, description: w.description })),
-      vocal_specs: { range: "A2-G4", type: "Baritone-Tenor", style: "Chest voice dominant, warm gritty country — Luke Combs / Kane Brown / Jordan Davis", constraints: "No falsetto, no belting above G4, must be singable live" },
+      vocal_specs: { range: "A2-G4", type: "Baritone-Tenor", style: "Chest voice dominant, warm gritty country baritone, deep southern storytelling tone", constraints: "No falsetto, no belting above G4, must be singable live", note: "Suno blokkeert artiestennamen — gebruik alleen beschrijvingen in de prompt" },
       songwriting_rules: {
         highest_save_rates: "Vaderschap-thema's (gem. 7.9%)",
         best_practice: "Specifieke details > abstracte metaforen ('muddy sneakers by the rug' > 'love wrapped up in pain')",
@@ -1513,7 +1513,7 @@ export function GeneratorTab() {
                     </li>
                     <li className="flex gap-2">
                       <span className="text-green-400 shrink-0">vocal</span>
-                      Houd zang in A2-G4 range (Luke Combs / Kane Brown hoogte)
+                      Houd zang in A2-G4 range (warme baritone-tenor, comfortabel)
                     </li>
                     <li className="flex gap-2">
                       <span className="text-accent-light shrink-0">let op</span>
