@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
 
 const PREFS_KEY = "erik-word-preferences";
 
@@ -9,151 +10,388 @@ const categories = [
   { id: "rebel_party", label: "Rebel / Party", description: "Outlaw, energie, autobiografisch — goed tussendoor" },
   { id: "dark_country", label: "Dark Country", description: "Confessional, coping, eenzaamheid" },
   { id: "country_trap", label: "Country-Trap / Fusion", description: "Rap-elementen, 808s, modern country blend" },
+  { id: "country_rock", label: "Country Rock", description: "Southern rock, Americana power" },
+  { id: "country_pop", label: "Country Pop", description: "Radio-friendly, breed publiek" },
+  { id: "honky_tonk", label: "Honky Tonk", description: "Klassiek barroom country, dansvloer energy" },
+  { id: "bluegrass", label: "Bluegrass / Folk", description: "Akoestisch, snel, traditioneel, pickin'" },
+  { id: "country_blues", label: "Country Blues", description: "Blues roots, slide guitar, soulful storytelling" },
+  { id: "red_dirt", label: "Red Dirt / Texas Country", description: "Ruig, onafhankelijk, outlaw Americana" },
+  { id: "country_metal", label: "Country Metal", description: "Heavy riffs, distortion, Frozen Steam-stijl" },
+  { id: "country_soul", label: "Country Soul / R&B", description: "Smooth vocals, gospel invloeden, warm" },
+  { id: "comedy_country", label: "Comedy Country", description: "Humor, zelfspot, tongue-in-cheek storytelling" },
+  { id: "acoustic_stripped", label: "Stripped / Acoustic", description: "Minimaal, puur, stem + gitaar" },
 ];
 
-const moods = [
-  "Emotional", "Introspective", "Hopeful", "Confident", "Wild",
-  "Energetic", "Anthemic", "Sad", "Haunting", "Intimate", "Raw",
+const moodOptions = [
+  { id: "Emotional", tooltip: "Diep gevoel, raakt je in het hart" },
+  { id: "Introspective", tooltip: "Naar binnen gekeerd, nadenkend over jezelf" },
+  { id: "Hopeful", tooltip: "Hoopvol, licht aan het einde van de tunnel" },
+  { id: "Confident", tooltip: "Zelfverzekerd, weten wie je bent" },
+  { id: "Wild", tooltip: "Ongecontroleerd, vrij, losgeslagen" },
+  { id: "Energetic", tooltip: "Vol energie, opzwepend" },
+  { id: "Anthemic", tooltip: "Stadion-waardig, meezingbaar, groots" },
+  { id: "Sad", tooltip: "Verdrietig, melancholisch" },
+  { id: "Haunting", tooltip: "Spookachtig mooi, blijft hangen" },
+  { id: "Intimate", tooltip: "Intiem, alsof je fluistert tegen \u00e9\u00e9n persoon" },
+  { id: "Raw", tooltip: "Rauw, ongepolijst, recht uit het hart" },
+  { id: "Defiant", tooltip: "Opstandig, rebels, ik doe het op mijn manier" },
+  { id: "Nostalgic", tooltip: "Terugkijkend, herinneringen, vroeger" },
+  { id: "Bittersweet", tooltip: "Zoet en pijnlijk tegelijk" },
+  { id: "Triumphant", tooltip: "Zegevierend, overwinnend, glorieus" },
+  { id: "Playful", tooltip: "Speels, luchtig, vrolijk" },
+  { id: "Gritty", tooltip: "Ruw, vuil, straatgevoel" },
+  { id: "Tender", tooltip: "Teder, zacht, liefdevol" },
+  { id: "Dark", tooltip: "Duister, zwaar, somber" },
+  { id: "Uplifting", tooltip: "Opbeurend, positief, motiverend" },
+  { id: "Funny", tooltip: "Grappig, komisch, lachen" },
+  { id: "Sarcastic", tooltip: "Sarcastisch, droog, tongue-in-cheek" },
+  { id: "Self-deprecating", tooltip: "Zelfspot, lachen om jezelf" },
+  { id: "Tongue-in-cheek", tooltip: "Niet helemaal serieus, knipoog" },
+  { id: "Rowdy", tooltip: "Ruig, luidruchtig, barroom energy" },
+  { id: "Reflective", tooltip: "Bezinnend, rustig terugkijkend" },
+  { id: "Empowering", tooltip: "Krachtig, inspirerend, geeft je moed" },
 ];
 
-const tempos = [
-  { id: "slow", label: "Slow (60-75 BPM)", bpm: "~62-72 BPM" },
-  { id: "mid", label: "Mid-tempo (76-100 BPM)", bpm: "~85-95 BPM" },
-  { id: "upbeat", label: "Upbeat (100-120 BPM)", bpm: "~105-115 BPM" },
-  { id: "fast", label: "Fast (120+ BPM)", bpm: "~125+ BPM" },
+const tempoOptions = [
+  { id: "ballad", label: "Ballad", bpm: "55-65 BPM", description: "Emotionele ballads, trouwmuziek, luisternummers", audience: "Luisteraars, Spotify playlists", tooltip: "Denk: 'Wealthiest Man', 'Custody War' — langzaam, emotioneel, elk woord telt" },
+  { id: "slow_country", label: "Slow Country", bpm: "66-78 BPM", description: "Classic country, storytelling, campfire songs", audience: "Country puristen, singer-songwriter fans", tooltip: "Denk: Chris Stapleton 'Tennessee Whiskey' — relaxed maar met gevoel" },
+  { id: "waltz", label: "Country Waltz", bpm: "75-90 BPM (3/4)", description: "Driekwartsmaat, romantisch, traditioneel", audience: "Trouwfeesten, traditionele country fans", tooltip: "3/4 maat — klassieke wals, romantisch dansen" },
+  { id: "mid_tempo", label: "Mid-tempo Groove", bpm: "79-95 BPM", description: "Laid-back country, cruise muziek, chill vibes", audience: "Breed publiek, radio-friendly", tooltip: "Denk: 'Better Than Before' — comfortabel tempo, brede appeal" },
+  { id: "shuffle", label: "Country Shuffle", bpm: "90-110 BPM", description: "Swingend, laid-back groove, honky tonk", audience: "Country bars, dansvloer", tooltip: "Dat typische shuffelende country-gevoel, lekker swingen" },
+  { id: "line_dance", label: "Line Dance", bpm: "96-115 BPM", description: "Two-step, honky-tonk, line dance nummers", audience: "Country bars, line dance community, festivals", tooltip: "Perfect voor line dance choreografie — steady beat, duidelijke structuur" },
+  { id: "uptempo_country", label: "Uptempo Country", bpm: "116-128 BPM", description: "Energieke country, truck songs, party anthems", audience: "Festivals, tailgate parties, workout playlists", tooltip: "Denk: Luke Bryan 'Country Girl' — energie, feest, zomer" },
+  { id: "country_rock", label: "Country Rock", bpm: "128-145 BPM", description: "Southern rock, driving country, stadium anthems", audience: "Rock crossover, festival headliners", tooltip: "Denk: 'Welcome To My Country' — volle bak energy, gitaarsolos" },
+  { id: "bluegrass_fast", label: "Fast Bluegrass", bpm: "140-180 BPM", description: "Snel geplukte banjo/mandoline, traditional pickin'", audience: "Bluegrass fans, folk festivals", tooltip: "Snelle vingerwerk, traditioneel maar opwindend" },
+  { id: "country_metal", label: "Country Metal", bpm: "145-180 BPM", description: "Metal fusion, heavy country, mosh pit energy", audience: "Frozen Steam fans, rock/metal crossover", tooltip: "Denk: Frozen Steam live — heavy, snel, headbangen" },
+  { id: "trap_country", label: "Trap Country", bpm: "75-85 BPM (half-time)", description: "808s, half-time groove, moderne country-rap", audience: "Jongere doelgroep, hip-hop crossover", tooltip: "Denk: 'That Line' — langzame beat maar met trap-energy eroverheen" },
+  { id: "country_funk", label: "Country Funk", bpm: "95-115 BPM", description: "Groovy, funky bass, ritmische country", audience: "Crossover publiek, dansvloer", tooltip: "Country meets funk — groovy basslijnen, lekker bewegen" },
 ];
 
 const instruments: Record<string, string[]> = {
   emotional_ballad: [
     "Acoustic Ballad", "Clean Fingerpicked Guitar", "Warm Piano Accents",
     "Brush Drums", "Fiddle Support", "Pedal Steel Swells", "Layered Strings",
-    "Slide Guitar Interlude", "Ambient Pads",
+    "Slide Guitar Interlude", "Ambient Pads", "Hammond Organ", "Cello Accents",
+    "Gentle Acoustic Outro", "Weeping Steel Guitar", "Harp Accents",
+    "Mandolin Tremolo", "Dobro", "Upright Bass",
   ],
   rebel_party: [
-    "Electric Guitar Riffs", "Southern Slide Guitar", "Banjo Accents",
+    "Electric Guitar Riffs", "Southern Slide Guitar", "Banjo",
     "Fiddle Fills", "Kickin' Drum Groove", "Guitar Solo Section",
-    "Southern Rock Guitar Riff", "Stomp-Clap Build",
+    "Southern Rock Guitar Riff", "Stomp-Clap Build", "Harmonica", "Driving Bass",
+    "Mandolin", "Tambourine", "Cowbell",
   ],
   dark_country: [
     "Slide Guitar", "Fiddle Layer", "Blues Rock Rhythm", "Brush Drums",
     "Drop D Tuning", "Pedal Steel", "Ambient Pads", "Stripped Bridge",
+    "Dobro", "Low Piano Notes", "Dark Acoustic Guitar", "Upright Bass",
+    "Harp Undertones",
   ],
   country_trap: [
     "Deep 808 Bass", "Twangy Guitars", "Banjo Layer", "Half-Time Groove",
-    "Country Flow", "Dirty Guitar Slide", "Fiddle Fade",
+    "Country Flow", "Dirty Guitar Slide", "Fiddle Fade", "Trap Hi-Hats",
+    "Synth Pads", "Auto-Tune Vocal Layer",
+  ],
+  country_rock: [
+    "Overdriven Electric Guitar", "Power Drums", "Southern Slide Guitar",
+    "Bass Guitar Drive", "Fiddle Screech", "Guitar Solo", "Hammond Organ",
+    "Stomp-Clap Build", "Distortion Pedal", "Banjo", "Mandolin",
+  ],
+  country_pop: [
+    "Clean Electric Guitar", "Pop Drums", "Acoustic Strum Pattern",
+    "Light Fiddle", "Banjo Accent", "Bass Groove", "Tambourine",
+    "Background Harmonies", "Bright Piano", "Mandolin", "Harp",
+  ],
+  honky_tonk: [
+    "Honky Tonk Piano", "Twangy Telecaster", "Fiddle", "Pedal Steel",
+    "Upright Bass", "Brushed Snare", "Banjo", "Western Swing Guitar",
+  ],
+  bluegrass: [
+    "Banjo (Scruggs Style)", "Mandolin", "Fiddle", "Acoustic Guitar (Flatpick)",
+    "Upright Bass", "Dobro", "Harmonica", "Dulcimer",
+  ],
+  country_blues: [
+    "Slide Guitar", "Blues Harp", "Fingerpicked Acoustic", "Brush Drums",
+    "Upright Bass", "Hammond Organ", "Pedal Steel", "Dobro",
+  ],
+  red_dirt: [
+    "Acoustic Guitar (Heavy Strum)", "Electric Guitar Crunch", "Fiddle",
+    "Pedal Steel", "Bass Guitar", "Kick Drum Heavy", "Harmonica",
+    "Mandolin", "Banjo",
+  ],
+  country_metal: [
+    "Distorted Electric Guitar", "Double Kick Drums", "Bass Guitar (Drop Tuning)",
+    "Banjo (Distorted)", "Fiddle Screech", "Slide Guitar (Heavy)",
+    "Power Chords", "Breakdown Section",
+  ],
+  country_soul: [
+    "Warm Piano", "Hammond B3 Organ", "Gospel Choir Backing",
+    "Smooth Bass", "Brush Drums", "Pedal Steel", "Strings Section",
+    "Horns (Trumpet/Sax)", "Harp",
+  ],
+  comedy_country: [
+    "Banjo", "Fiddle", "Acoustic Guitar", "Kazoo",
+    "Washboard", "Tambourine", "Cowbell", "Honky Tonk Piano",
+  ],
+  acoustic_stripped: [
+    "Fingerpicked Acoustic Guitar", "Light Brushed Drums", "Upright Bass",
+    "Soft Fiddle", "Mandolin", "Harp", "Gentle Piano",
   ],
 };
 
-const themes: Record<string, string[]> = {
-  emotional_ballad: [
-    "Vaderschap / kinderen", "Persoonlijke groei", "Kwetsbaarheid + kracht",
-    "Dankbaarheid", "Liefde & relaties", "Identiteit / masker",
-  ],
-  rebel_party: [
-    "Dualiteit (IT + muziek)", "Outlaw lifestyle", "Nederlandse roots",
-    "Vrijheid & onafhankelijkheid", "Humor / autobiografisch",
-  ],
-  dark_country: [
-    "Eenzaamheid / coping", "Gebroken relatie", "Innerlijke strijd",
-    "Verslaving", "Nachtelijke reflectie",
-  ],
-  country_trap: [
-    "Straatleven + country", "Rebel met geloof", "Authenticiteit",
-    "Freedom & grit",
-  ],
-};
+// Thema's gegroepeerd per categorie voor overzicht
+const themeGroups = [
+  {
+    label: "Vaderschap & Familie",
+    themes: [
+      "Vader die zijn dochter ziet opgroeien",
+      "Bedtime routine met de kids",
+      "Co-ouderschap na scheiding",
+      "Eerste schooldag / loslaten",
+      "Weekendvader die er altijd is",
+      "Brief aan mijn kinderen",
+      "Familietradities doorgeven",
+    ],
+  },
+  {
+    label: "Persoonlijke Groei & Kracht",
+    themes: [
+      "Opstaan na een dieptepunt",
+      "De man worden die je wilt zijn",
+      "Vergeving — aan jezelf of anderen",
+      "Lessen van je vader/moeder",
+      "Oude demonen achter je laten",
+      "Sterker uit een breuk komen",
+      "Accepteren wie je bent",
+    ],
+  },
+  {
+    label: "Liefde & Relaties",
+    themes: [
+      "Eerste date die alles verandert",
+      "Liefde op het tweede gezicht",
+      "Lang samen, nog steeds verliefd",
+      "De 'one that got away'",
+      "Online daten in het country leven",
+      "Trouwen op je eigen manier",
+      "Liefde zonder voorwaarden",
+    ],
+  },
+  {
+    label: "Rebel & Lifestyle",
+    themes: [
+      "Outlaw die zijn eigen regels maakt",
+      "Kleine jongen, grote dromen",
+      "Nederlandse roots in een Amerikaans genre",
+      "Feesten alsof er geen morgen is",
+      "Authenticiteit boven perfectie",
+      "Tegen de stroom in zwemmen",
+      "De buitenstaander die het maakt",
+    ],
+  },
+  {
+    label: "Donker & Reflectief",
+    themes: [
+      "Eenzame nacht in een lege kamer",
+      "Verslaving en de strijd ertegen",
+      "Verlies van een dierbare",
+      "Spijt en wat had kunnen zijn",
+      "Het masker dat je draagt",
+      "Nachtelijke autorit met je gedachten",
+      "De stilte na de storm",
+    ],
+  },
+  {
+    label: "Thuiskomen & Dankbaarheid",
+    themes: [
+      "Thuiskomen na een lange dag",
+      "Rijk zijn zonder geld",
+      "De kleine dingen die ertoe doen",
+      "Vrienden die er altijd zijn",
+      "Je plek vinden in de wereld",
+      "Een koude avond, een warm huis",
+      "Dankbaar voor wat je hebt",
+    ],
+  },
+];
+
+const allThemes = themeGroups.flatMap((g) => g.themes);
+
+// Suno weirdness presets
+const weirdnessOptions = [
+  { id: 0, label: "0% — Standaard", description: "Veilig, voorspelbaar, radio-ready" },
+  { id: 10, label: "10% — Licht creatief", description: "Subtiele verrassingen" },
+  { id: 20, label: "20% — Experimenteel", description: "Onverwachte wendingen" },
+  { id: 30, label: "30% — Wild", description: "Genre-bending, verrassend" },
+];
+
+function toggle<T>(arr: T[], item: T): T[] {
+  return arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
+}
+
+interface SavedOutput {
+  id: string;
+  suno_prompt: string;
+  lyric_template: string;
+  config_json: string;
+  loved: boolean;
+  created_at: string;
+}
 
 function buildSunoPrompt(config: {
-  category: string;
+  selectedCategories: string[];
   selectedMoods: string[];
-  tempo: string;
+  selectedTempos: string[];
   selectedInstruments: string[];
-  theme: string;
+  selectedThemes: string[];
+  customTheme: string;
   avoided: string[];
   kept: string[];
   customNotes: string;
+  weirdness: number;
 }): string {
-  const { category, selectedMoods, tempo, selectedInstruments, theme, avoided, kept, customNotes } = config;
+  const { selectedCategories, selectedMoods, selectedTempos, selectedInstruments, selectedThemes, customTheme, avoided, kept, customNotes, weirdness } = config;
 
-  const tempoInfo = tempos.find((t) => t.id === tempo);
-  const catLabel = categories.find((c) => c.id === category)?.label || category;
+  const catLabels = selectedCategories.map(
+    (id) => categories.find((c) => c.id === id)?.label || id
+  );
 
-  let prompt = `[Style: ${catLabel}, Modern Americana, Male Vocal]\n`;
+  // Style of Music line (Suno format)
+  const styleGenres = [...catLabels, "Modern Americana", "Country", "Singer-Songwriter"];
+  let prompt = `[Style of Music: ${styleGenres.join(", ")}]\n`;
 
+  // Mood
   if (selectedMoods.length > 0) {
     prompt += `[Mood: ${selectedMoods.join(", ")}]\n`;
   }
 
-  if (tempoInfo) {
-    prompt += `[${tempoInfo.bpm}]\n`;
+  // Tempo
+  if (selectedTempos.length > 0) {
+    const bpms = selectedTempos.map((id) => tempoOptions.find((t) => t.id === id)?.bpm).filter(Boolean);
+    prompt += `[Tempo: ${bpms.join(", ")}]\n`;
   }
 
+  // Instruments
   if (selectedInstruments.length > 0) {
     prompt += `[Instruments: ${selectedInstruments.join(", ")}]\n`;
   }
 
-  prompt += `[Vocal Range: C2–A4] [Male Voice Only] [Midrange Chest Voice]\n`;
-  prompt += `[Emotional Country Tone] [Singer-Songwriter Feel]\n`;
+  // Vocal specs — Luke Combs / Kane Brown / Jordan Davis range
+  prompt += `[Vocal Range: A2-G4] [Male Voice Only] [Baritone-Tenor] [Chest Voice Dominant]\n`;
+  prompt += `[Vocal Style: Warm, gritty country tone — think Luke Combs meets Kane Brown]\n`;
+  prompt += `[No Falsetto] [No High Belting Above G4] [Comfortable Male Range]\n`;
+
+  // Production
+  prompt += `[Emotional Country Tone] [Singer-Songwriter Feel] [Studio Quality Production]\n`;
   prompt += `[8-bar Instrumental Intro] [Vocals start after intro]\n`;
 
-  if (category === "emotional_ballad") {
+  // Category-specific structure tags
+  const primary = selectedCategories[0] || "emotional_ballad";
+  if (primary === "emotional_ballad") {
     prompt += `[Stripped Acoustic Breakdown] [Soaring Final Chorus]\n`;
     prompt += `[Mid-song Instrumental Interlude between 2nd Chorus and Bridge]\n`;
-  } else if (category === "rebel_party") {
+    prompt += `[Gentle Acoustic Outro with Fiddle Fade]\n`;
+  } else if (primary === "rebel_party") {
     prompt += `[Extended Instrumental Break - 16 bars] [Guitar Solo Section]\n`;
     prompt += `[Stomp-Clap Build to Final Chorus]\n`;
-  } else if (category === "dark_country") {
-    prompt += `[Slow groove] [Dark tone, confessional lyrics, slow-burning build]\n`;
+    prompt += `[Outro - 8 bars + Fade]\n`;
+  } else if (primary === "dark_country") {
+    prompt += `[Slow groove] [Dark tone] [Confessional lyrics] [Slow-burning build]\n`;
     prompt += `[Stripped Bridge] [Melancholy outro with fiddle]\n`;
-  } else if (category === "country_trap") {
+  } else if (primary === "country_trap") {
     prompt += `[Country Flow + Outlaw Rap Groove] [Half-Time Groove]\n`;
-    prompt += `[Big Rock Chorus – Southern Energy]\n`;
+    prompt += `[Big Rock Chorus - Southern Energy]\n`;
+  } else if (primary === "country_rock") {
+    prompt += `[Driving Rhythm] [Power Chorus] [Guitar Solo Mid-song]\n`;
+    prompt += `[Build to Anthemic Final Chorus]\n`;
+  } else if (primary === "country_pop") {
+    prompt += `[Radio-Ready Mix] [Clean Production] [Singable Hook]\n`;
+    prompt += `[Bright Final Chorus with Harmonies]\n`;
+  } else if (primary === "honky_tonk") {
+    prompt += `[Honky Tonk Piano Lead] [Swinging Rhythm] [Two-Step Beat]\n`;
+    prompt += `[Danceable Groove] [Classic Country Feel]\n`;
+  } else if (primary === "bluegrass") {
+    prompt += `[Fast Pickin'] [Acoustic Drive] [Traditional Feel]\n`;
+    prompt += `[Instrumental Breaks with Trading Solos]\n`;
+  } else if (primary === "country_blues") {
+    prompt += `[Blues Progression] [Slide Guitar Lead] [Soulful Groove]\n`;
+    prompt += `[Raw, Organic Feel] [Blues Turnaround]\n`;
+  } else if (primary === "red_dirt") {
+    prompt += `[Gritty Production] [Heavy Acoustic Strum] [Outlaw Energy]\n`;
+    prompt += `[No Polish - Raw and Real]\n`;
+  } else if (primary === "country_metal") {
+    prompt += `[Heavy Distortion] [Double Kick] [Breakdown Section]\n`;
+    prompt += `[Metal Riffs with Country Twang] [Aggressive Build]\n`;
+  } else if (primary === "country_soul") {
+    prompt += `[Warm Production] [Gospel Build] [Smooth Groove]\n`;
+    prompt += `[Horn Section Accents] [Soulful Vocal Runs]\n`;
+  } else if (primary === "comedy_country") {
+    prompt += `[Light-hearted Production] [Playful Arrangement]\n`;
+    prompt += `[Comedic Timing in Instrumental Breaks]\n`;
+  } else if (primary === "acoustic_stripped") {
+    prompt += `[Minimal Production] [Voice + Guitar Focus] [Room Ambience]\n`;
+    prompt += `[No Drums First Half] [Gentle Build]\n`;
   }
 
   prompt += `[Duration: ~4:00]\n`;
 
-  if (theme) {
-    prompt += `\nTheme: ${theme}\n`;
+  // Weirdness
+  if (weirdness > 0) {
+    prompt += `[Weirdness: ${weirdness}%]\n`;
   }
 
+  // Theme
+  const allSelectedThemes = [...selectedThemes];
+  if (customTheme.trim()) allSelectedThemes.push(customTheme.trim());
+
+  if (allSelectedThemes.length > 0) {
+    prompt += `\n[Theme: ${allSelectedThemes.join(", ")}]\n`;
+  }
+
+  // Word preferences
   if (avoided.length > 0) {
-    prompt += `\n⚠️ VERMIJD deze woorden (overused in catalogus): ${avoided.join(", ")}\n`;
+    prompt += `\n[VERMIJD deze woorden: ${avoided.join(", ")}]\n`;
   }
 
   if (kept.length > 0) {
-    prompt += `\n✓ Trademark woorden (mag terugkomen): ${kept.join(", ")}\n`;
+    prompt += `[Trademark woorden (mag terugkomen): ${kept.join(", ")}]\n`;
   }
 
+  // Extra notes
   if (customNotes) {
-    prompt += `\nExtra notities: ${customNotes}\n`;
+    prompt += `\n[Extra: ${customNotes}]\n`;
   }
 
   return prompt;
 }
 
-function buildLyricStructure(category: string): string {
+function buildLyricTemplate(category: string): string {
   if (category === "emotional_ballad") {
     return `[Intro]
-(8-bar fingerpicked acoustic intro with fiddle and warm piano accents)
+[8-bar Fingerpicked Acoustic Guitar] [Fiddle Melody] [Warm Piano]
 
 [Verse 1]
 (4-6 lines — set the scene with specific, concrete details)
 (Show vulnerability through imagery, not statements)
+(Sensory details: what do you see, hear, feel, smell?)
 
 [Verse 2]
 (4-6 lines — deepen the story, add emotional weight)
-(Use sensory details: sounds, textures, smells)
+(Introduce the tension or conflict)
 
 [Pre-Chorus]
-(2-3 lines — emotional pivot, build tension)
+(2-3 lines — emotional pivot, build tension toward chorus)
 
 [Chorus]
 (6-8 lines — emotional core, singable hook)
 (Pattern: kwetsbaarheid + kracht)
 (End with a memorable, repeatable line)
 
+[Instrumental Break]
+[Pedal Steel + Fiddle - 8 bars]
+
 [Verse 3]
-(4-6 lines — new angle on the theme)
+(4-6 lines — new angle, deeper layer)
 
 [Pre-Chorus]
 (2-3 lines — variation on first pre-chorus)
@@ -161,25 +399,25 @@ function buildLyricStructure(category: string): string {
 [Chorus]
 (Repeat with slight lyrical variation)
 
-[Instrumental Break]
-(16-bar acoustic guitar and pedal steel with fiddle counter-melody)
+[Instrumental Interlude]
+[16-bar Acoustic Guitar + Slide Guitar + Fiddle Counter-melody]
 
 [Bridge]
 (3-4 lines — turning point, revelation, or reflection)
 (This is where the emotional climax hits)
 
 [Final Chorus]
-(6-8 lines — soaring, evolved version of chorus)
+[Soaring Final Chorus] [Full Band Build]
+(6-8 lines — evolved version of chorus)
 (Swap a key word or line to show growth/resolution)
 
 [Outro]
-(8-10 bar fingerpicked guitar outro with soft fiddle fade)`;
+[10-bar Fingerpicked Guitar Outro] [Soft Fiddle Fade] [Piano Trail]`;
   }
 
   if (category === "rebel_party") {
-    return `[Intro – 8 bars]
-[Southern Rock Guitar Riff]
-[Banjo Underlayer]
+    return `[Intro]
+[8-bar Southern Rock Guitar Riff] [Banjo Underlayer] [Driving Drums]
 
 [Verse 1]
 (6-8 lines — swagger, attitude, autobiographical details)
@@ -189,6 +427,7 @@ function buildLyricStructure(category: string): string {
 (2 lines — setup for the hook)
 
 [Chorus]
+[Power Chorus] [Full Band Energy]
 (6-8 lines — anthemic, singable, energetic)
 (Identity statement: "I am..." / "Call me..." / "Welcome to...")
 
@@ -201,23 +440,23 @@ function buildLyricStructure(category: string): string {
 [Chorus]
 (Repeat)
 
-[Instrumental Break – 16 bars]
-[Guitar Solo]
-[Fiddle/Slide Guitar Duel]
-[Stomp-Clap Build to Final Chorus]
+[Instrumental Break]
+[16-bar Guitar Solo] [Fiddle/Slide Guitar Duel] [Stomp-Clap Build]
 
 [Bridge]
 (4 lines — moment of realness beneath the bravado)
 
-[Final Chorus – Soaring]
+[Final Chorus]
+[Soaring Final Chorus] [Maximum Energy]
 (Evolved chorus with bigger energy)
 
-[Outro – 8 bars + Fade]`;
+[Outro]
+[8-bar Electric Guitar Fade] [Banjo Echo] [Final Drum Hit]`;
   }
 
   if (category === "dark_country") {
-    return `[Intro – 8 bars]
-(Slide guitar + brush drums — dark, moody)
+    return `[Intro]
+[8-bar Slide Guitar] [Brush Drums] [Dark, Moody Atmosphere]
 
 [Verse 1]
 (4-6 lines — confessional, raw honesty)
@@ -230,8 +469,12 @@ function buildLyricStructure(category: string): string {
 (3-4 lines — shift from despair to coping)
 
 [Chorus]
+[Heavy Emotional Delivery]
 (6-8 lines — the anthem of survival/coping)
 (Dark but not hopeless)
+
+[Instrumental Break]
+[Slide Guitar Solo - 8 bars] [Pedal Steel Swells]
 
 [Verse 3]
 (4-6 lines — mirror cracks, self-reflection)
@@ -243,60 +486,163 @@ function buildLyricStructure(category: string): string {
 (Repeat with added intensity)
 
 [Bridge]
-(3-4 lines — stripped, quiet, most vulnerable moment)
+[Stripped Back - Voice + Guitar Only]
+(3-4 lines — most vulnerable moment)
 
-[Final Chorus – stripped to full band]
+[Final Chorus]
+[Stripped to Full Band Build]
 (Build from nothing to full power)
 
 [Outro]
-(Slide guitar fades, single drum hit, fiddle trail)`;
+[Slide Guitar Fade] [Single Drum Hit] [Fiddle Trail] [Silence]`;
   }
 
-  // country_trap
-  return `[Spoken Intro / Ad-lib]
+  if (category === "country_trap") {
+    return `[Spoken Intro]
 (2-4 lines — attitude, sets the tone)
 
-[Verse 1] [Country Flow + Outlaw Rap Groove]
+[Verse 1]
+[Country Flow + Outlaw Rap Groove]
 (8 lines — rhythmic, punchy, storytelling)
 (Mix country imagery with rap cadence)
 
-[Pre-Chorus] [Melodic Country Rock Build]
+[Pre-Chorus]
+[Melodic Country Rock Build]
 (2 lines — transition to singing)
 
-[Chorus] [Big Rock Chorus – Southern Energy]
+[Chorus]
+[Big Rock Chorus] [Southern Energy]
 (6-8 lines — anthemic, southern rock chorus)
 
-[Verse 2] [Rap Verse – Swagger Flow / Banjo Layer]
+[Instrumental Break]
+[808 Beat + Twangy Guitar - 8 bars]
+
+[Verse 2]
+[Rap Verse] [Swagger Flow] [Banjo Layer]
 (8 lines — faster flow, more swagger)
 
-[Pre-Chorus] [Half-Time Groove]
+[Pre-Chorus]
+[Half-Time Groove]
 (2 lines — variation)
 
-[Chorus] [Anthemic Country Rock]
+[Chorus]
+[Anthemic Country Rock]
 (Repeat)
 
-[Bridge] [Breakdown – Spoken/Rap Blend over Slide Guitar]
+[Bridge]
+[Breakdown] [Spoken/Rap Blend over Slide Guitar]
 (6-8 lines — raw, spoken-word feel)
 
-[Final Chorus] [Soaring Southern Rock]
+[Final Chorus]
+[Soaring Southern Rock] [Guitar Solo Lead-In]
 (Evolved chorus — bigger, final statement)
 
-[Outro] [Fiddle Fade + Dirty Guitar Slide]`;
+[Outro]
+[Fiddle Fade] [Dirty Guitar Slide] [808 Fade]`;
+  }
+
+  if (category === "country_rock") {
+    return `[Intro]
+[8-bar Overdriven Electric Guitar] [Power Drums] [Southern Energy]
+
+[Verse 1]
+(4-6 lines — driving energy, confident storytelling)
+
+[Pre-Chorus]
+(2 lines — tension build)
+
+[Chorus]
+[Power Chorus] [Stadium Energy] [Driving Rhythm]
+(6-8 lines — anthemic, fist-pumping chorus)
+
+[Verse 2]
+(4-6 lines — raise the stakes)
+
+[Pre-Chorus]
+(2 lines — variation)
+
+[Chorus]
+(Repeat)
+
+[Instrumental Break]
+[16-bar Guitar Solo] [Southern Slide Guitar] [Hammond Organ Swells]
+
+[Bridge]
+(3-4 lines — emotional contrast to the power)
+
+[Final Chorus]
+[Full Band Maximum Volume] [Soaring Vocals]
+(Evolved chorus — everything cranked up)
+
+[Outro]
+[Guitar Solo Fade] [Feedback Trail] [Final Power Chord]`;
+  }
+
+  // country_pop
+  return `[Intro]
+[4-bar Clean Guitar + Light Drums] [Bright, Radio-Ready Feel]
+
+[Verse 1]
+(4-6 lines — relatable, accessible storytelling)
+(Catchy rhythm, easy to sing along)
+
+[Pre-Chorus]
+(2-3 lines — melodic lift toward chorus)
+
+[Chorus]
+[Bright Chorus] [Singable Hook] [Background Harmonies]
+(6-8 lines — the hook everyone remembers)
+(Simple but effective — one-line singalong moment)
+
+[Verse 2]
+(4-6 lines — deeper but still accessible)
+
+[Pre-Chorus]
+(2-3 lines — variation)
+
+[Chorus]
+(Repeat)
+
+[Instrumental Break]
+[8-bar Acoustic + Fiddle] [Light Touch]
+
+[Bridge]
+(3-4 lines — emotional peak, key change optional)
+
+[Final Chorus]
+[Key Change Up] [Full Production] [Layered Harmonies]
+(Elevated repeat — goosebump moment)
+
+[Outro]
+[Acoustic Guitar Fade] [Final Vocal Ad-lib]`;
 }
 
 export function GeneratorTab() {
-  const [category, setCategory] = useState("emotional_ballad");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(["emotional_ballad"]);
   const [selectedMoods, setSelectedMoods] = useState<string[]>(["Emotional", "Hopeful"]);
-  const [tempo, setTempo] = useState("slow");
+  const [selectedTempos, setSelectedTempos] = useState<string[]>(["slow_country"]);
   const [selectedInstruments, setSelectedInstruments] = useState<string[]>([]);
-  const [theme, setTheme] = useState("");
+  const [selectedThemes, setSelectedThemes] = useState<string[]>([]);
+  const [customTheme, setCustomTheme] = useState("");
   const [customNotes, setCustomNotes] = useState("");
+  const [weirdness, setWeirdness] = useState(0);
   const [avoided, setAvoided] = useState<string[]>([]);
   const [kept, setKept] = useState<string[]>([]);
   const [showOutput, setShowOutput] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [savedOutputs, setSavedOutputs] = useState<SavedOutput[]>([]);
+  const [showSaved, setShowSaved] = useState(false);
+  const [expandedThemeGroup, setExpandedThemeGroup] = useState<string | null>(null);
+
+  const loadSavedOutputs = useCallback(async () => {
+    const { data } = await supabase
+      .from("generator_outputs")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setSavedOutputs(data);
+  }, []);
 
   useEffect(() => {
-    // Load word preferences
     try {
       const prefs = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
       const a: string[] = [];
@@ -308,309 +654,481 @@ export function GeneratorTab() {
       setAvoided(a);
       setKept(k);
     } catch {}
-  }, []);
+    loadSavedOutputs();
+  }, [loadSavedOutputs]);
 
-  // Reset instruments when category changes
-  useEffect(() => {
-    setSelectedInstruments([]);
-  }, [category]);
+  const availableInstruments = Array.from(
+    new Set(selectedCategories.flatMap((cat) => instruments[cat] || []))
+  );
 
-  const toggleMood = (mood: string) => {
-    setSelectedMoods((prev) =>
-      prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood]
-    );
-  };
-
-  const toggleInstrument = (inst: string) => {
-    setSelectedInstruments((prev) =>
-      prev.includes(inst) ? prev.filter((i) => i !== inst) : [...prev, inst]
-    );
-  };
-
-  const sunoPrompt = buildSunoPrompt({
-    category,
+  const currentConfig = {
+    selectedCategories,
     selectedMoods,
-    tempo,
+    selectedTempos,
     selectedInstruments,
-    theme,
+    selectedThemes,
+    customTheme,
     avoided,
     kept,
     customNotes,
-  });
+    weirdness,
+  };
 
-  const lyricStructure = buildLyricStructure(category);
+  const sunoPrompt = buildSunoPrompt(currentConfig);
+  const primaryCategory = selectedCategories[0] || "emotional_ballad";
+  const lyricTemplate = buildLyricTemplate(primaryCategory);
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const saveOutput = async () => {
+    const { error } = await supabase.from("generator_outputs").insert({
+      suno_prompt: sunoPrompt,
+      lyric_template: lyricTemplate,
+      config_json: JSON.stringify(currentConfig),
+      loved: false,
+    });
+    if (!error) {
+      loadSavedOutputs();
+    }
+  };
+
+  const toggleLove = async (id: string, current: boolean) => {
+    await supabase.from("generator_outputs").update({ loved: !current }).eq("id", id);
+    loadSavedOutputs();
+  };
+
+  const deleteOutput = async (id: string) => {
+    await supabase.from("generator_outputs").delete().eq("id", id);
+    loadSavedOutputs();
+  };
+
+  const loadConfig = (configJson: string) => {
+    try {
+      const config = JSON.parse(configJson);
+      setSelectedCategories(config.selectedCategories || []);
+      setSelectedMoods(config.selectedMoods || []);
+      setSelectedTempos(config.selectedTempos || []);
+      setSelectedInstruments(config.selectedInstruments || []);
+      setSelectedThemes(config.selectedThemes || []);
+      setCustomTheme(config.customTheme || "");
+      setCustomNotes(config.customNotes || "");
+      setWeirdness(config.weirdness || 0);
+      setShowOutput(true);
+      setShowSaved(false);
+    } catch {}
   };
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Configuration */}
-        <div className="space-y-6">
-          {/* Category */}
-          <section className="bg-card border border-border rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-accent-light mb-3">
-              Categorie
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategory(cat.id)}
-                  className={`p-3 rounded-lg border text-left transition-all ${
-                    category === cat.id
-                      ? "border-accent bg-accent/10"
-                      : "border-border hover:border-border hover:bg-card-hover"
-                  }`}
-                >
-                  <p className="text-sm font-medium text-foreground">
-                    {cat.label}
-                  </p>
-                  <p className="text-xs text-muted mt-0.5">{cat.description}</p>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Theme */}
-          <section className="bg-card border border-border rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-accent-light mb-3">
-              Thema
-            </h3>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {(themes[category] || []).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    theme === t
-                      ? "bg-accent text-white"
-                      : "bg-border text-muted hover:text-foreground"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-            <input
-              type="text"
-              placeholder="Of typ een eigen thema..."
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent"
-            />
-          </section>
-
-          {/* Mood */}
-          <section className="bg-card border border-border rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-accent-light mb-3">
-              Mood (meerdere mogelijk)
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {moods.map((mood) => (
-                <button
-                  key={mood}
-                  onClick={() => toggleMood(mood)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    selectedMoods.includes(mood)
-                      ? "bg-accent text-white"
-                      : "bg-border text-muted hover:text-foreground"
-                  }`}
-                >
-                  {mood}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Tempo */}
-          <section className="bg-card border border-border rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-accent-light mb-3">
-              Tempo
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              {tempos.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setTempo(t.id)}
-                  className={`p-3 rounded-lg border text-left transition-all ${
-                    tempo === t.id
-                      ? "border-accent bg-accent/10"
-                      : "border-border hover:bg-card-hover"
-                  }`}
-                >
-                  <p className="text-sm font-medium text-foreground">
-                    {t.label}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Instruments */}
-          <section className="bg-card border border-border rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-accent-light mb-3">
-              Instrumenten
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {(instruments[category] || []).map((inst) => (
-                <button
-                  key={inst}
-                  onClick={() => toggleInstrument(inst)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    selectedInstruments.includes(inst)
-                      ? "bg-accent text-white"
-                      : "bg-border text-muted hover:text-foreground"
-                  }`}
-                >
-                  {inst}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          {/* Word preferences summary */}
-          {(avoided.length > 0 || kept.length > 0) && (
-            <section className="bg-card border border-border rounded-lg p-5">
-              <h3 className="text-sm font-semibold text-accent-light mb-3">
-                Woordvoorkeuren (uit Woorden-tab)
-              </h3>
-              {avoided.length > 0 && (
-                <div className="mb-2">
-                  <p className="text-xs text-red-400 mb-1">Vermijden:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {avoided.map((w) => (
-                      <span
-                        key={w}
-                        className="px-2 py-0.5 rounded text-xs bg-red-950/30 text-red-400 border border-red-900/50"
-                      >
-                        {w}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {kept.length > 0 && (
-                <div>
-                  <p className="text-xs text-green-400 mb-1">Behouden:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {kept.map((w) => (
-                      <span
-                        key={w}
-                        className="px-2 py-0.5 rounded text-xs bg-green-950/30 text-green-400 border border-green-900/50"
-                      >
-                        {w}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* Custom notes */}
-          <section className="bg-card border border-border rounded-lg p-5">
-            <h3 className="text-sm font-semibold text-accent-light mb-3">
-              Extra notities
-            </h3>
-            <textarea
-              placeholder="Bijv. 'Inspiratie: Chris Stapleton meets Zach Bryan' of 'Focus op het moment dat je dochter voor het eerst fietst'"
-              value={customNotes}
-              onChange={(e) => setCustomNotes(e.target.value)}
-              rows={3}
-              className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent resize-none"
-            />
-          </section>
-
-          <button
-            onClick={() => setShowOutput(true)}
-            className="w-full py-3 bg-accent hover:bg-accent-light text-white font-semibold rounded-lg transition-colors"
-          >
-            Genereer Suno Prompt & Lyric Template
-          </button>
-        </div>
-
-        {/* Right: Output */}
-        <div className="space-y-6">
-          {showOutput ? (
-            <>
-              {/* Suno Prompt */}
-              <section className="bg-card border border-accent/30 rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-accent-light">
-                    Suno Prompt
-                  </h3>
-                  <button
-                    onClick={() => copyToClipboard(sunoPrompt)}
-                    className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
-                  >
-                    Kopieer
-                  </button>
-                </div>
-                <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-96">
-                  {sunoPrompt}
-                </pre>
-              </section>
-
-              {/* Lyric Structure */}
-              <section className="bg-card border border-accent/30 rounded-lg p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-accent-light">
-                    Lyric Template
-                  </h3>
-                  <button
-                    onClick={() => copyToClipboard(lyricStructure)}
-                    className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
-                  >
-                    Kopieer
-                  </button>
-                </div>
-                <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-[600px]">
-                  {lyricStructure}
-                </pre>
-              </section>
-
-              {/* Tips */}
-              <section className="bg-card border border-border rounded-lg p-5">
-                <h3 className="text-sm font-semibold text-accent-light mb-3">
-                  Songwriting Tips (data-bewezen)
-                </h3>
-                <ul className="space-y-2 text-xs text-muted">
-                  <li className="flex gap-2">
-                    <span className="text-green-400 shrink-0">7.9%</span>
-                    Vaderschap-thema&apos;s leveren de hoogste save rates op
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-400 shrink-0">tip</span>
-                    Specifieke details &gt; abstracte metaforen (&quot;muddy sneakers by the rug&quot;)
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-green-400 shrink-0">tip</span>
-                    Kwetsbaarheid + kracht = winnende combo (strijd → doorzetting)
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-accent-light shrink-0">let op</span>
-                    Rebel/party nummers zijn prima tussendoor maar niet als lead single
-                  </li>
-                </ul>
-              </section>
-            </>
-          ) : (
-            <div className="bg-card border border-border rounded-lg p-12 flex flex-col items-center justify-center text-center">
-              <div className="text-4xl mb-4 text-muted">🎸</div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Configureer je nummer
-              </h3>
-              <p className="text-sm text-muted max-w-xs">
-                Kies categorie, thema, mood en instrumenten. Klik dan op
-                &quot;Genereer&quot; voor je Suno prompt en lyric template.
-              </p>
-            </div>
-          )}
-        </div>
+      {/* Toggle between generator and saved */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowSaved(false)}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            !showSaved ? "bg-accent text-white" : "bg-card text-muted hover:text-foreground border border-border"
+          }`}
+        >
+          Generator
+        </button>
+        <button
+          onClick={() => { setShowSaved(true); loadSavedOutputs(); }}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            showSaved ? "bg-accent text-white" : "bg-card text-muted hover:text-foreground border border-border"
+          }`}
+        >
+          Opgeslagen ({savedOutputs.length})
+        </button>
       </div>
+
+      {showSaved ? (
+        /* Saved outputs view */
+        <div className="space-y-4">
+          {savedOutputs.length === 0 ? (
+            <div className="bg-card border border-border rounded-lg p-12 text-center">
+              <p className="text-muted">Nog geen opgeslagen outputs. Genereer er een en klik op &quot;Opslaan&quot;.</p>
+            </div>
+          ) : (
+            savedOutputs.map((output) => (
+              <div key={output.id} className="bg-card border border-border rounded-lg p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleLove(output.id, output.loved)}
+                      className={`text-lg transition-colors ${
+                        output.loved ? "text-red-500" : "text-muted hover:text-red-400"
+                      }`}
+                      title={output.loved ? "Unlike" : "Love"}
+                    >
+                      {output.loved ? "\u2764" : "\u2661"}
+                    </button>
+                    <span className="text-xs text-muted">
+                      {new Date(output.created_at).toLocaleDateString("nl-NL", {
+                        day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => loadConfig(output.config_json)}
+                      className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                    >
+                      Optimaliseer
+                    </button>
+                    <button
+                      onClick={() => copyToClipboard(output.suno_prompt, `saved-${output.id}`)}
+                      className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                    >
+                      {copiedField === `saved-${output.id}` ? "Gekopieerd!" : "Kopieer"}
+                    </button>
+                    <button
+                      onClick={() => deleteOutput(output.id)}
+                      className="px-3 py-1 text-xs bg-red-900/20 text-red-400 rounded hover:bg-red-900/30 transition-colors"
+                    >
+                      Verwijder
+                    </button>
+                  </div>
+                </div>
+                <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-3 border border-border overflow-auto max-h-48">
+                  {output.suno_prompt}
+                </pre>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        /* Generator view */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left: Configuration */}
+          <div className="space-y-6">
+            {/* Category */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-accent-light">Categorie</h3>
+                <span className="text-xs text-muted">meerdere mogelijk</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategories(toggle(selectedCategories, cat.id))}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      selectedCategories.includes(cat.id)
+                        ? "border-accent bg-accent/10"
+                        : "border-border hover:bg-card-hover"
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-foreground">{cat.label}</p>
+                    <p className="text-xs text-muted mt-0.5">{cat.description}</p>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Themes - grouped */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-accent-light">Thema</h3>
+                <span className="text-xs text-muted">{selectedThemes.length} geselecteerd</span>
+              </div>
+              <div className="space-y-2 mb-3">
+                {themeGroups.map((group) => (
+                  <div key={group.label}>
+                    <button
+                      onClick={() => setExpandedThemeGroup(expandedThemeGroup === group.label ? null : group.label)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-background border border-border hover:bg-card-hover transition-colors"
+                    >
+                      <span className="text-xs font-medium text-foreground">{group.label}</span>
+                      <div className="flex items-center gap-2">
+                        {group.themes.filter((t) => selectedThemes.includes(t)).length > 0 && (
+                          <span className="text-xs text-accent-light">
+                            {group.themes.filter((t) => selectedThemes.includes(t)).length}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted">
+                          {expandedThemeGroup === group.label ? "\u25B2" : "\u25BC"}
+                        </span>
+                      </div>
+                    </button>
+                    {expandedThemeGroup === group.label && (
+                      <div className="flex flex-wrap gap-1.5 mt-2 ml-2">
+                        {group.themes.map((t) => (
+                          <button
+                            key={t}
+                            onClick={() => setSelectedThemes(toggle(selectedThemes, t))}
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                              selectedThemes.includes(t)
+                                ? "bg-accent text-white"
+                                : "bg-border text-muted hover:text-foreground"
+                            }`}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <input
+                type="text"
+                placeholder="Of typ een eigen thema..."
+                value={customTheme}
+                onChange={(e) => setCustomTheme(e.target.value)}
+                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent"
+              />
+            </section>
+
+            {/* Mood */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-accent-light">Mood</h3>
+                <span className="text-xs text-muted">meerdere mogelijk — hover voor uitleg</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {moodOptions.map((mood) => (
+                  <button
+                    key={mood.id}
+                    onClick={() => setSelectedMoods(toggle(selectedMoods, mood.id))}
+                    title={mood.tooltip}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      selectedMoods.includes(mood.id)
+                        ? "bg-accent text-white"
+                        : "bg-border text-muted hover:text-foreground"
+                    }`}
+                  >
+                    {mood.id}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Tempo - with audience info */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-accent-light">Tempo &amp; Doelgroep</h3>
+                <span className="text-xs text-muted">meerdere mogelijk</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {tempoOptions.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setSelectedTempos(toggle(selectedTempos, t.id))}
+                    title={t.tooltip}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      selectedTempos.includes(t.id)
+                        ? "border-accent bg-accent/10"
+                        : "border-border hover:bg-card-hover"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-foreground">{t.label}</p>
+                      <span className="text-xs text-accent-light font-mono">{t.bpm}</span>
+                    </div>
+                    <p className="text-xs text-muted mt-0.5">{t.description}</p>
+                    <p className="text-xs text-muted/60 mt-0.5">Doelgroep: {t.audience}</p>
+                    <p className="text-xs text-accent/60 mt-1 italic">{t.tooltip}</p>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Instruments */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-accent-light">Instrumenten</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setSelectedInstruments([...availableInstruments])}
+                    className="text-xs text-accent-light hover:text-accent transition-colors"
+                  >
+                    Alles
+                  </button>
+                  <span className="text-xs text-muted">|</span>
+                  <button
+                    onClick={() => setSelectedInstruments([])}
+                    className="text-xs text-muted hover:text-foreground transition-colors"
+                  >
+                    Geen
+                  </button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {availableInstruments.map((inst) => (
+                  <button
+                    key={inst}
+                    onClick={() => setSelectedInstruments(toggle(selectedInstruments, inst))}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                      selectedInstruments.includes(inst)
+                        ? "bg-accent text-white"
+                        : "bg-border text-muted hover:text-foreground"
+                    }`}
+                  >
+                    {inst}
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Weirdness */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <h3 className="text-sm font-semibold text-accent-light mb-3">Suno Weirdness</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {weirdnessOptions.map((w) => (
+                  <button
+                    key={w.id}
+                    onClick={() => setWeirdness(w.id)}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      weirdness === w.id
+                        ? "border-accent bg-accent/10"
+                        : "border-border hover:bg-card-hover"
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-foreground">{w.label}</p>
+                    <p className="text-xs text-muted mt-0.5">{w.description}</p>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* Word preferences */}
+            {(avoided.length > 0 || kept.length > 0) && (
+              <section className="bg-card border border-border rounded-lg p-5">
+                <h3 className="text-sm font-semibold text-accent-light mb-3">Woordvoorkeuren</h3>
+                {avoided.length > 0 && (
+                  <div className="mb-2">
+                    <p className="text-xs text-red-400 mb-1">Vermijden:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {avoided.map((w) => (
+                        <span key={w} className="px-2 py-0.5 rounded text-xs bg-red-950/30 text-red-400 border border-red-900/50">{w}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {kept.length > 0 && (
+                  <div>
+                    <p className="text-xs text-green-400 mb-1">Behouden:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {kept.map((w) => (
+                        <span key={w} className="px-2 py-0.5 rounded text-xs bg-green-950/30 text-green-400 border border-green-900/50">{w}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Custom notes */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <h3 className="text-sm font-semibold text-accent-light mb-3">Extra notities</h3>
+              <textarea
+                placeholder="Bijv. 'Inspiratie: Chris Stapleton meets Zach Bryan' of 'Focus op het moment dat je dochter voor het eerst fietst'"
+                value={customNotes}
+                onChange={(e) => setCustomNotes(e.target.value)}
+                rows={3}
+                className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-accent resize-none"
+              />
+            </section>
+
+            <button
+              onClick={() => setShowOutput(true)}
+              className="w-full py-3 bg-accent hover:bg-accent-light text-white font-semibold rounded-lg transition-colors"
+            >
+              Genereer Suno Prompt &amp; Lyric Template
+            </button>
+          </div>
+
+          {/* Right: Output */}
+          <div className="space-y-6">
+            {showOutput ? (
+              <>
+                {/* Save button */}
+                <button
+                  onClick={saveOutput}
+                  className="w-full py-2 bg-green-900/30 hover:bg-green-900/50 text-green-400 font-medium rounded-lg border border-green-900/50 transition-colors text-sm"
+                >
+                  Opslaan in bibliotheek
+                </button>
+
+                {/* Suno Prompt */}
+                <section className="bg-card border border-accent/30 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-accent-light">Suno Prompt (Style of Music)</h3>
+                    <button
+                      onClick={() => copyToClipboard(sunoPrompt, "suno")}
+                      className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                    >
+                      {copiedField === "suno" ? "Gekopieerd!" : "Kopieer"}
+                    </button>
+                  </div>
+                  <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-96">
+                    {sunoPrompt}
+                  </pre>
+                </section>
+
+                {/* Lyric Template */}
+                <section className="bg-card border border-accent/30 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-accent-light">Lyric Template (met Suno metadata)</h3>
+                    <button
+                      onClick={() => copyToClipboard(lyricTemplate, "lyric")}
+                      className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                    >
+                      {copiedField === "lyric" ? "Gekopieerd!" : "Kopieer"}
+                    </button>
+                  </div>
+                  <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-[600px]">
+                    {lyricTemplate}
+                  </pre>
+                </section>
+
+                {/* Tips */}
+                <section className="bg-card border border-border rounded-lg p-5">
+                  <h3 className="text-sm font-semibold text-accent-light mb-3">Songwriting Tips</h3>
+                  <ul className="space-y-2 text-xs text-muted">
+                    <li className="flex gap-2">
+                      <span className="text-green-400 shrink-0">7.9%</span>
+                      Vaderschap-thema&apos;s leveren de hoogste save rates op
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-green-400 shrink-0">tip</span>
+                      Specifieke details &gt; abstracte metaforen (&quot;muddy sneakers by the rug&quot;)
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-green-400 shrink-0">tip</span>
+                      Kwetsbaarheid + kracht = winnende combo (strijd → doorzetting)
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-green-400 shrink-0">vocal</span>
+                      Houd zang in A2-G4 range (Luke Combs / Kane Brown hoogte)
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-accent-light shrink-0">let op</span>
+                      Rebel/party nummers prima tussendoor, niet als lead single
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="text-red-400 shrink-0">niet</span>
+                      Geen IT/coder/developer referenties in nieuwe nummers
+                    </li>
+                  </ul>
+                </section>
+              </>
+            ) : (
+              <div className="bg-card border border-border rounded-lg p-12 flex flex-col items-center justify-center text-center">
+                <div className="text-4xl mb-4 text-muted">🎸</div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Configureer je nummer</h3>
+                <p className="text-sm text-muted max-w-xs">
+                  Alles is multiselect. Kies categorie, thema, mood, tempo en instrumenten.
+                  Output komt in Suno-ready formaat met [brackets].
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
