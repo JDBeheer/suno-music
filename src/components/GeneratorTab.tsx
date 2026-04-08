@@ -432,6 +432,10 @@ function buildSunoPrompt(config: {
   prompt += `[Short Instrumental Breaks - max 8 bars] [No Extended Solos]\n`;
   prompt += `[Structure: Intro-V1-V2-PreC-Chorus-V3-PreC-Chorus-Bridge-FinalChorus-Outro]\n`;
   prompt += `[Fade out before 4:30]\n`;
+  prompt += `[Dynamic Shifts: Change energy/tone after 2nd chorus — stripped-back moment before building to climax]\n`;
+  prompt += `[KEY CHANGE: Final chorus must modulate UP by half step or whole step — build anticipation before the shift]\n`;
+  prompt += `[Bridge strips down to create contrast — then final chorus hits in new higher key with full band]\n`;
+  prompt += `[Avoid repetitive AI patterns — vary melody between verses, add human-feel imperfections]\n`;
 
   // Weirdness
   if (weirdness > 0) {
@@ -498,13 +502,15 @@ function buildLyricTemplate(category: string): string {
 [8-bar Pedal Steel + Fiddle + Acoustic Guitar]
 
 [Bridge]
+[Key Change Up] [Stripped Back — Voice + Piano Only] [Different Rhythm Than Chorus]
 (3-4 lines — turning point, revelation, or reflection)
-(This is where the emotional climax hits)
+(SHIFT: completely different energy — if chorus was big, bridge is whispered)
 
 [Final Chorus]
-[Soaring Final Chorus] [Full Band Build]
-(6-8 lines — evolved version of chorus)
+[Key Change - Half Step Up] [Soaring Final Chorus] [Full Band Build]
+(6-8 lines — same chorus but in higher key)
 (Swap a key word or line to show growth/resolution)
+(The key change lifts everything — goosebump moment)
 
 [Outro]
 [Short Fingerpicked Guitar Outro] [Soft Fiddle Fade]`;
@@ -539,11 +545,14 @@ function buildLyricTemplate(category: string): string {
 [8-bar Guitar Solo] [Fiddle/Slide Guitar Duel] [Stomp-Clap Build]
 
 [Bridge]
+[Half-time Feel] [Drop to Acoustic Only] [Contrast with chorus energy]
 (4 lines — moment of realness beneath the bravado)
+(SHIFT: sudden quiet after all the energy — catches listener off guard)
 
 [Final Chorus]
-[Soaring Final Chorus] [Maximum Energy]
-(Evolved chorus with bigger energy)
+[Key Change - Half Step Up] [Soaring Final Chorus] [Maximum Energy] [Double-time drums]
+(Evolved chorus in higher key with bigger energy)
+(SHIFT: key change + explosion — maximum impact after quiet bridge)
 
 [Outro]
 [8-bar Electric Guitar Fade] [Banjo Echo] [Final Drum Hit]`;
@@ -581,12 +590,14 @@ function buildLyricTemplate(category: string): string {
 (Repeat with added intensity)
 
 [Bridge]
-[Stripped Back - Voice + Guitar Only]
+[Stripped Back - Voice + Guitar Only] [Tempo Slows] [Key Change Down]
 (3-4 lines — most vulnerable moment)
+(SHIFT: everything drops away — raw, naked, almost spoken)
 
 [Final Chorus]
-[Stripped to Full Band Build]
-(Build from nothing to full power)
+[Key Change - Half Step Up] [Stripped to Full Band Build] [Original Tempo Returns]
+(Build from nothing to full power in new higher key)
+(SHIFT: silence → key change → explosion — maximum contrast)
 
 [Outro]
 [Slide Guitar Fade] [Single Drum Hit] [Fiddle Trail] [Silence]`;
@@ -625,12 +636,14 @@ function buildLyricTemplate(category: string): string {
 (Repeat)
 
 [Bridge]
-[Breakdown] [Spoken/Rap Blend over Slide Guitar]
+[Breakdown] [Spoken/Rap Blend over Slide Guitar] [Beat Drops Out]
 (6-8 lines — raw, spoken-word feel)
+(SHIFT: strip everything — just voice and slide guitar, no drums)
 
 [Final Chorus]
-[Soaring Southern Rock] [Guitar Solo Lead-In]
-(Evolved chorus — bigger, final statement)
+[Key Change - Half Step Up] [Soaring Southern Rock] [Guitar Solo Lead-In] [Full 808 + Band Combined]
+(Evolved chorus in higher key — bigger, final statement)
+(SHIFT: key change + everything hits at once — country and trap merged at max volume)
 
 [Outro]
 [Fiddle Fade] [Dirty Guitar Slide] [808 Fade]`;
@@ -666,8 +679,8 @@ function buildLyricTemplate(category: string): string {
 (3-4 lines — emotional contrast to the power)
 
 [Final Chorus]
-[Full Band Maximum Volume] [Soaring Vocals]
-(Evolved chorus — everything cranked up)
+[Key Change - Half Step Up] [Full Band Maximum Volume] [Soaring Vocals]
+(Evolved chorus in higher key — everything cranked up)
 
 [Outro]
 [Guitar Solo Fade] [Feedback Trail] [Final Power Chord]`;
@@ -711,8 +724,8 @@ function buildLyricTemplate(category: string): string {
 (The country heart of the song exposed)
 
 [Final Chorus]
-[Maximum Intensity] [All Elements Combined]
-(Everything at once — metal power with country soul)
+[Key Change - Half Step Up] [Maximum Intensity] [All Elements Combined]
+(Everything at once in higher key — metal power with country soul)
 
 [Outro]
 [Feedback] [Final Power Chord] [Country Guitar Lick Fade]`;
@@ -749,7 +762,7 @@ function buildLyricTemplate(category: string): string {
 (3-4 lines — the soul beneath the industrial shell)
 
 [Final Chorus]
-[Everything Combined] [Maximum Wall of Sound]
+[Key Change - Half Step Up] [Everything Combined] [Maximum Wall of Sound]
 
 [Outro]
 [Industrial Beat Decay] [Single Country Guitar Note Sustain]`;
@@ -791,8 +804,8 @@ function buildLyricTemplate(category: string): string {
 (3-4 lines — floating, dreamlike)
 
 [Final Chorus]
-[Maximum Dynamic] [Everything Cranked] [Pedal Steel Screaming]
-(The biggest moment — all walls of sound)
+[Key Change - Half Step Up] [Maximum Dynamic] [Everything Cranked] [Pedal Steel Screaming]
+(The biggest moment in higher key — all walls of sound)
 
 [Outro]
 [Slow Fade to Acoustic] [Single Guitar Note] [Silence]`;
