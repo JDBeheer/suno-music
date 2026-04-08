@@ -854,7 +854,7 @@ export function GeneratorTab() {
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [savedOutputs, setSavedOutputs] = useState<SavedOutput[]>([]);
   const [showSaved, setShowSaved] = useState(false);
-  const [expandedThemeGroup, setExpandedThemeGroup] = useState<string | null>(null);
+  const [expandedThemeGroup, setExpandedThemeGroup] = useState<string | null>("all");
 
   const loadSavedOutputs = useCallback(async () => {
     const { data } = await supabase
@@ -1061,24 +1061,15 @@ export function GeneratorTab() {
               <div className="space-y-2 mb-3">
                 {themeGroups.map((group) => (
                   <div key={group.label}>
-                    <button
-                      onClick={() => setExpandedThemeGroup(expandedThemeGroup === group.label ? null : group.label)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-background border border-border hover:bg-card-hover transition-colors"
-                    >
+                    <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-background border border-border">
                       <span className="text-xs font-medium text-foreground">{group.label}</span>
-                      <div className="flex items-center gap-2">
-                        {group.themes.filter((t) => selectedThemes.includes(t)).length > 0 && (
-                          <span className="text-xs text-accent-light">
-                            {group.themes.filter((t) => selectedThemes.includes(t)).length}
-                          </span>
-                        )}
-                        <span className="text-xs text-muted">
-                          {expandedThemeGroup === group.label ? "\u25B2" : "\u25BC"}
+                      {group.themes.filter((t) => selectedThemes.includes(t)).length > 0 && (
+                        <span className="text-xs text-accent-light">
+                          {group.themes.filter((t) => selectedThemes.includes(t)).length} geselecteerd
                         </span>
-                      </div>
-                    </button>
-                    {expandedThemeGroup === group.label && (
-                      <div className="flex flex-wrap gap-1.5 mt-2 ml-2">
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2 ml-2">
                         {group.themes.map((t) => (
                           <button
                             key={t}
@@ -1092,8 +1083,7 @@ export function GeneratorTab() {
                             {t}
                           </button>
                         ))}
-                      </div>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>
