@@ -473,44 +473,36 @@ function buildLyricTemplate(category: string): string {
 [8-bar Fingerpicked Acoustic Guitar] [Fiddle Melody] [Warm Piano]
 
 [Verse 1]
-(4-6 lines — set the scene with specific, concrete details)
-(Show vulnerability through imagery, not statements)
-(Sensory details: what do you see, hear, feel, smell?)
+
 
 [Verse 2]
-(4-6 lines — deepen the story, add emotional weight)
-(Introduce the tension or conflict)
+
 
 [Pre-Chorus]
-(2-3 lines — emotional pivot, build tension toward chorus)
+
 
 [Chorus]
-(6-8 lines — emotional core, singable hook)
-(Pattern: kwetsbaarheid + kracht)
-(End with a memorable, repeatable line)
+
 
 [Verse 3]
-(4-6 lines — new angle, deeper layer)
+
 
 [Pre-Chorus]
-(2-3 lines — variation on first pre-chorus)
+
 
 [Chorus]
-(Repeat with slight lyrical variation)
+
 
 [Instrumental Break]
 [8-bar Pedal Steel + Fiddle + Acoustic Guitar]
 
 [Bridge]
-[Key Change Up] [Stripped Back — Voice + Piano Only] [Different Rhythm Than Chorus]
-(3-4 lines — turning point, revelation, or reflection)
-(SHIFT: completely different energy — if chorus was big, bridge is whispered)
+[Stripped Back — Voice + Piano Only]
+
 
 [Final Chorus]
 [Key Change - Half Step Up] [Soaring Final Chorus] [Full Band Build]
-(6-8 lines — same chorus but in higher key)
-(Swap a key word or line to show growth/resolution)
-(The key change lifts everything — goosebump moment)
+
 
 [Outro]
 [Short Fingerpicked Guitar Outro] [Soft Fiddle Fade]`;
@@ -521,38 +513,34 @@ function buildLyricTemplate(category: string): string {
 [8-bar Southern Rock Guitar Riff] [Banjo Underlayer] [Driving Drums]
 
 [Verse 1]
-(6-8 lines — swagger, attitude, autobiographical details)
-(Mix bragging with self-awareness)
+
 
 [Pre-Chorus]
-(2 lines — setup for the hook)
+
 
 [Chorus]
 [Power Chorus] [Full Band Energy]
-(6-8 lines — anthemic, singable, energetic)
-(Identity statement: "I am..." / "Call me..." / "Welcome to...")
+
 
 [Verse 2]
-(6-8 lines — deeper layer, contrast or surprise)
+
 
 [Pre-Chorus]
-(2 lines — variation)
+
 
 [Chorus]
-(Repeat)
+
 
 [Instrumental Break]
 [8-bar Guitar Solo] [Fiddle/Slide Guitar Duel] [Stomp-Clap Build]
 
 [Bridge]
-[Half-time Feel] [Drop to Acoustic Only] [Contrast with chorus energy]
-(4 lines — moment of realness beneath the bravado)
-(SHIFT: sudden quiet after all the energy — catches listener off guard)
+[Half-time Feel] [Drop to Acoustic Only]
+
 
 [Final Chorus]
-[Key Change - Half Step Up] [Soaring Final Chorus] [Maximum Energy] [Double-time drums]
-(Evolved chorus in higher key with bigger energy)
-(SHIFT: key change + explosion — maximum impact after quiet bridge)
+[Key Change - Half Step Up] [Maximum Energy] [Double-time drums]
+
 
 [Outro]
 [8-bar Electric Guitar Fade] [Banjo Echo] [Final Drum Hit]`;
@@ -563,87 +551,80 @@ function buildLyricTemplate(category: string): string {
 [8-bar Slide Guitar] [Brush Drums] [Dark, Moody Atmosphere]
 
 [Verse 1]
-(4-6 lines — confessional, raw honesty)
-(Start in the depths)
+
 
 [Verse 2]
-(4-6 lines — dig deeper into the struggle)
+
 
 [Pre-Chorus]
-(3-4 lines — shift from despair to coping)
+
 
 [Chorus]
 [Heavy Emotional Delivery]
-(6-8 lines — the anthem of survival/coping)
-(Dark but not hopeless)
+
 
 [Instrumental Break]
 [Slide Guitar Solo - 8 bars] [Pedal Steel Swells]
 
 [Verse 3]
-(4-6 lines — mirror cracks, self-reflection)
+
 
 [Pre-Chorus]
-(Variation — scars as proof of living)
+
 
 [Chorus]
-(Repeat with added intensity)
+
 
 [Bridge]
-[Stripped Back - Voice + Guitar Only] [Tempo Slows] [Key Change Down]
-(3-4 lines — most vulnerable moment)
-(SHIFT: everything drops away — raw, naked, almost spoken)
+[Stripped Back - Voice + Guitar Only] [Tempo Slows]
+
 
 [Final Chorus]
-[Key Change - Half Step Up] [Stripped to Full Band Build] [Original Tempo Returns]
-(Build from nothing to full power in new higher key)
-(SHIFT: silence → key change → explosion — maximum contrast)
+[Key Change - Half Step Up] [Stripped to Full Band Build]
+
 
 [Outro]
-[Slide Guitar Fade] [Single Drum Hit] [Fiddle Trail] [Silence]`;
+[Slide Guitar Fade] [Single Drum Hit] [Fiddle Trail]`;
   }
 
   if (category === "country_trap") {
-    return `[Spoken Intro]
-(2-4 lines — attitude, sets the tone)
+    return `[Intro]
+[8-bar 808 Beat + Twangy Guitar]
 
 [Verse 1]
 [Country Flow + Outlaw Rap Groove]
-(8 lines — rhythmic, punchy, storytelling)
-(Mix country imagery with rap cadence)
+
 
 [Pre-Chorus]
 [Melodic Country Rock Build]
-(2 lines — transition to singing)
+
 
 [Chorus]
 [Big Rock Chorus] [Southern Energy]
-(6-8 lines — anthemic, southern rock chorus)
+
 
 [Instrumental Break]
 [808 Beat + Twangy Guitar - 8 bars]
 
 [Verse 2]
-[Rap Verse] [Swagger Flow] [Banjo Layer]
-(8 lines — faster flow, more swagger)
+[Melodic Flow] [Banjo Layer]
+
 
 [Pre-Chorus]
 [Half-Time Groove]
-(2 lines — variation)
+
 
 [Chorus]
 [Anthemic Country Rock]
-(Repeat)
+
 
 [Bridge]
-[Breakdown] [Spoken/Rap Blend over Slide Guitar] [Beat Drops Out]
-(6-8 lines — raw, spoken-word feel)
-(SHIFT: strip everything — just voice and slide guitar, no drums)
+[Stripped — Voice + Slide Guitar Only] [Beat Drops Out]
+
 
 [Final Chorus]
-[Key Change - Half Step Up] [Soaring Southern Rock] [Guitar Solo Lead-In] [Full 808 + Band Combined]
-(Evolved chorus in higher key — bigger, final statement)
-(SHIFT: key change + everything hits at once — country and trap merged at max volume)
+[Key Change - Half Step Up] [Soaring Southern Rock] [Full 808 + Band Combined]
+
 
 [Outro]
 [Fiddle Fade] [Dirty Guitar Slide] [808 Fade]`;
@@ -654,33 +635,34 @@ function buildLyricTemplate(category: string): string {
 [8-bar Overdriven Electric Guitar] [Power Drums] [Southern Energy]
 
 [Verse 1]
-(4-6 lines — driving energy, confident storytelling)
+
 
 [Pre-Chorus]
-(2 lines — tension build)
+
 
 [Chorus]
 [Power Chorus] [Stadium Energy] [Driving Rhythm]
-(6-8 lines — anthemic, fist-pumping chorus)
+
 
 [Verse 2]
-(4-6 lines — raise the stakes)
+
 
 [Pre-Chorus]
-(2 lines — variation)
+
 
 [Chorus]
-(Repeat)
+
 
 [Instrumental Break]
 [8-bar Guitar Solo] [Southern Slide Guitar] [Hammond Organ Swells]
 
 [Bridge]
-(3-4 lines — emotional contrast to the power)
+[Drop to Acoustic]
+
 
 [Final Chorus]
 [Key Change - Half Step Up] [Full Band Maximum Volume] [Soaring Vocals]
-(Evolved chorus in higher key — everything cranked up)
+
 
 [Outro]
 [Guitar Solo Fade] [Feedback Trail] [Final Power Chord]`;
@@ -691,41 +673,38 @@ function buildLyricTemplate(category: string): string {
 [Heavy Down-tuned Guitar Riff] [Electronic Percussion] [Building Tension]
 
 [Verse 1]
-[Rap Flow over Heavy Guitars]
-(6-8 lines — aggressive, rhythmic, storytelling with attitude)
-(Country imagery meets street energy)
+[Melodic Aggressive Vocal over Heavy Guitars]
+
 
 [Pre-Chorus]
 [Melodic Transition] [Building to Explosion]
-(2-3 lines — tension before the drop)
+
 
 [Chorus]
-[Screamed/Sung Melodic Chorus] [Full Band Assault] [Country Twang Guitar Accent]
-(4-6 lines — anthemic, singable despite the heaviness)
-(The country melody shining through the metal)
+[Sung Melodic Chorus] [Full Band Assault] [Country Twang Guitar Accent]
+
 
 [Verse 2]
-[Harder Rap Flow] [DJ Scratches] [Distorted Banjo Accent]
-(6-8 lines — escalate the energy)
+[More Intensity] [DJ Scratches] [Distorted Banjo Accent]
+
 
 [Pre-Chorus]
-(2-3 lines — variation, more intense)
+
 
 [Chorus]
-(Repeat with added aggression)
+
 
 [Breakdown]
 [Half-time Breakdown] [Muted Guitars] [Country Slide Guitar over Metal Chug]
-(4 lines — the heaviest moment, crowd participation)
+
 
 [Bridge]
-[Stripped to Acoustic Country] [Emotional Contrast]
-(3-4 lines — sudden quiet, vulnerability)
-(The country heart of the song exposed)
+[Stripped to Acoustic Country]
+
 
 [Final Chorus]
 [Key Change - Half Step Up] [Maximum Intensity] [All Elements Combined]
-(Everything at once in higher key — metal power with country soul)
+
 
 [Outro]
 [Feedback] [Final Power Chord] [Country Guitar Lick Fade]`;
@@ -736,33 +715,33 @@ function buildLyricTemplate(category: string): string {
 [Industrial Synth Pulse] [Mechanical Beat Building] [Dark Atmosphere]
 
 [Verse 1]
-[Spoken/Sung over Industrial Beat]
-(4-6 lines — dark, brooding storytelling)
-(Processed vocals, mechanical feel)
+[Sung over Industrial Beat]
+
 
 [Pre-Chorus]
 [Building Electronic Layers]
-(2-3 lines — tension escalation)
+
 
 [Chorus]
 [Full Industrial Power] [Melodic Country Vocal over Electronic Assault]
-(4-6 lines — the human element fighting through the machine)
+
 
 [Instrumental Break]
 [Industrial Beat + Processed Slide Guitar - 8 bars]
 
 [Verse 2]
-(4-6 lines — deeper into darkness)
+
 
 [Chorus]
-(Repeat with more intensity)
+
 
 [Bridge]
-[Stripped to Distorted Banjo + Vocal] [Raw Country Moment]
-(3-4 lines — the soul beneath the industrial shell)
+[Stripped to Distorted Banjo + Vocal]
+
 
 [Final Chorus]
 [Key Change - Half Step Up] [Everything Combined] [Maximum Wall of Sound]
+
 
 [Outro]
 [Industrial Beat Decay] [Single Country Guitar Note Sustain]`;
@@ -774,41 +753,41 @@ function buildLyricTemplate(category: string): string {
 
 [Verse 1]
 [Quiet, Intimate Delivery]
-(4-6 lines — whispered intensity, building slowly)
+
 
 [Verse 2]
 [Slightly Louder, More Drive]
-(4-6 lines — tension building)
+
 
 [Pre-Chorus]
 [Dynamic Build]
-(2-3 lines — the wave rising)
+
 
 [Chorus]
-[LOUD] [Full Distortion + Country Fiddle] [Emotional Explosion]
-(6-8 lines — quiet-loud contrast, raw emotion)
+[LOUD] [Full Distortion + Country Fiddle]
+
 
 [Verse 3]
 [Back to Quiet] [Just Voice + Clean Guitar]
-(4-6 lines — reset for next wave)
+
 
 [Pre-Chorus]
-(2-3 lines)
+
 
 [Chorus]
 [Even Louder Than Before]
-(Repeat with more layers)
+
 
 [Bridge]
 [Atmospheric] [Reverb-Heavy] [Ethereal Fiddle]
-(3-4 lines — floating, dreamlike)
+
 
 [Final Chorus]
 [Key Change - Half Step Up] [Maximum Dynamic] [Everything Cranked] [Pedal Steel Screaming]
-(The biggest moment in higher key — all walls of sound)
+
 
 [Outro]
-[Slow Fade to Acoustic] [Single Guitar Note] [Silence]`;
+[Slow Fade to Acoustic] [Single Guitar Note]`;
   }
 
   // country_pop
@@ -816,38 +795,36 @@ function buildLyricTemplate(category: string): string {
 [4-bar Clean Guitar + Light Drums] [Bright, Radio-Ready Feel]
 
 [Verse 1]
-(4-6 lines — relatable, accessible storytelling)
-(Catchy rhythm, easy to sing along)
+
 
 [Pre-Chorus]
-(2-3 lines — melodic lift toward chorus)
+
 
 [Chorus]
 [Bright Chorus] [Singable Hook] [Background Harmonies]
-(6-8 lines — the hook everyone remembers)
-(Simple but effective — one-line singalong moment)
+
 
 [Verse 2]
-(4-6 lines — deeper but still accessible)
+
 
 [Pre-Chorus]
-(2-3 lines — variation)
+
 
 [Chorus]
-(Repeat)
+
 
 [Instrumental Break]
 [8-bar Acoustic + Fiddle] [Light Touch]
 
 [Bridge]
-(3-4 lines — emotional peak, key change optional)
+
 
 [Final Chorus]
-[Key Change Up] [Full Production] [Layered Harmonies]
-(Elevated repeat — goosebump moment)
+[Key Change - Half Step Up] [Full Production] [Layered Harmonies]
+
 
 [Outro]
-[Acoustic Guitar Fade] [Final Vocal Ad-lib]`;
+[Acoustic Guitar Fade]`;
 }
 
 export function GeneratorTab() {
