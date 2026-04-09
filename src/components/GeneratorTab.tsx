@@ -497,7 +497,7 @@ function buildLyricTemplate(category: string): string {
 [8-bar Pedal Steel + Fiddle + Acoustic Guitar]
 
 [Bridge]
-[Stripped Back — Voice + Piano Only]
+[Key Change Up] [Stripped Back — Voice + Piano Only] [Different Rhythm Than Chorus]
 
 
 [Final Chorus]
@@ -535,11 +535,11 @@ function buildLyricTemplate(category: string): string {
 [8-bar Guitar Solo] [Fiddle/Slide Guitar Duel] [Stomp-Clap Build]
 
 [Bridge]
-[Half-time Feel] [Drop to Acoustic Only]
+[Half-time Feel] [Drop to Acoustic Only] [Contrast with chorus energy]
 
 
 [Final Chorus]
-[Key Change - Half Step Up] [Maximum Energy] [Double-time drums]
+[Key Change - Half Step Up] [Soaring Final Chorus] [Maximum Energy] [Double-time drums]
 
 
 [Outro]
@@ -576,15 +576,15 @@ function buildLyricTemplate(category: string): string {
 
 
 [Bridge]
-[Stripped Back - Voice + Guitar Only] [Tempo Slows]
+[Stripped Back - Voice + Guitar Only] [Tempo Slows] [Key Change Down]
 
 
 [Final Chorus]
-[Key Change - Half Step Up] [Stripped to Full Band Build]
+[Key Change - Half Step Up] [Stripped to Full Band Build] [Original Tempo Returns]
 
 
 [Outro]
-[Slide Guitar Fade] [Single Drum Hit] [Fiddle Trail]`;
+[Slide Guitar Fade] [Single Drum Hit] [Fiddle Trail] [Silence]`;
   }
 
   if (category === "country_trap") {
@@ -623,7 +623,7 @@ function buildLyricTemplate(category: string): string {
 
 
 [Final Chorus]
-[Key Change - Half Step Up] [Soaring Southern Rock] [Full 808 + Band Combined]
+[Key Change - Half Step Up] [Soaring Southern Rock] [Guitar Solo Lead-In] [Full 808 + Band Combined]
 
 
 [Outro]
@@ -681,7 +681,7 @@ function buildLyricTemplate(category: string): string {
 
 
 [Chorus]
-[Sung Melodic Chorus] [Full Band Assault] [Country Twang Guitar Accent]
+[Screamed/Sung Melodic Chorus] [Full Band Assault] [Country Twang Guitar Accent]
 
 
 [Verse 2]
