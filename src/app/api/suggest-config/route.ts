@@ -28,9 +28,10 @@ REGELS:
 - artists: kies 0-3 max
 - instruments: kies 4-8 max
 - weirdness: 0, 10, 20, of 30
+- styleInfluence: 0-100 (hoeveel % de style prompt de muziek beïnvloedt. Standaard 50. Hoger = meer volgens de style prompt, lager = meer creatieve vrijheid voor Suno)
 - songLength: "kort" voor pakkende, simpele nummers, "standaard" voor uitgebreidere nummers
 - customTheme: vrije tekst die het idee samenvat als thema
-- notes: korte notities voor extra context
+- notes: BELANGRIJK — als de gebruiker specifieke situaties, beelden, scènes of details noemt, zet die hier LETTERLIJK als bullet points. Bijvoorbeeld: als iemand zegt "biertje drinken, BBQ staat aan, kinderen rennen rond", dan komt dat hier als concrete songwriting-aanwijzingen. Dit veld wordt door de lyricschrijver gebruikt om de juiste beelden te kiezen.
 
 Geef je antwoord als PURE JSON (geen markdown, geen uitleg).`;
 
@@ -48,9 +49,10 @@ Geef een JSON object terug met deze exacte keys:
   "artists": ["Artist Name"],
   "instruments": ["Instrument1", "Instrument2"],
   "weirdness": 0,
+  "styleInfluence": 50,
   "songLength": "kort",
   "customTheme": "beschrijving",
-  "notes": "extra context"
+  "notes": "specifieke situaties en beelden uit het idee als bullet points"
 }`;
 
   const completion = await openai.chat.completions.create({

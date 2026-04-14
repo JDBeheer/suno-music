@@ -853,6 +853,7 @@ export function GeneratorTab() {
   const [showAiSuggest, setShowAiSuggest] = useState(false);
   const [aiSuggestIdea, setAiSuggestIdea] = useState("");
   const [isAiSuggesting, setIsAiSuggesting] = useState(false);
+  const [styleInfluence, setStyleInfluence] = useState(50);
 
   const loadSavedOutputs = useCallback(async () => {
     const { data } = await supabase
@@ -1152,6 +1153,7 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
         if (c.artists) setSelectedArtists(c.artists);
         if (c.instruments) setSelectedInstruments(c.instruments);
         if (c.weirdness !== undefined) setWeirdness(c.weirdness);
+        if (c.styleInfluence !== undefined) setStyleInfluence(c.styleInfluence);
         if (c.songLength) setSongLength(c.songLength);
         if (c.customTheme) setCustomTheme(c.customTheme);
         if (c.notes) setCustomNotes(c.notes);
@@ -1176,6 +1178,7 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
     setWeirdness(0);
     setFreshMode(false);
     setSongLength("standaard");
+    setStyleInfluence(50);
     setShowOutput(false);
     setGeneratedLyrics("");
     setLyricFeedback("");
@@ -1717,6 +1720,26 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
                   </button>
                 ))}
               </div>
+              {/* Style Influence slider */}
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-foreground">Style Influence</label>
+                  <span className="text-xs font-mono text-accent-light">{styleInfluence}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  step={5}
+                  value={styleInfluence}
+                  onChange={(e) => setStyleInfluence(Number(e.target.value))}
+                  className="w-full accent-accent"
+                />
+                <div className="flex justify-between text-[10px] text-muted mt-1">
+                  <span>Creatieve vrijheid</span>
+                  <span>Strak volgens prompt</span>
+                </div>
+              </div>
             </section>
 
             {/* Word preferences — hidden in Fresh Mode */}
@@ -1876,11 +1899,33 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
                     </div>
                   </div>
 
-                  {/* 4. Style Influence */}
+                  {/* 4. Style Influence % */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-foreground">4. Style Influence %</label>
+                      <button
+                        onClick={() => copyToClipboard(`${styleInfluence}`, "influence-pct")}
+                        className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                      >
+                        {copiedField === "influence-pct" ? "Gekopieerd!" : "Kopieer"}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3 bg-background rounded-lg p-3 border border-border">
+                      <span className="text-lg font-bold text-accent-light">{styleInfluence}%</span>
+                      <span className="text-xs text-muted">
+                        {styleInfluence <= 25 && "Veel creatieve vrijheid voor Suno"}
+                        {styleInfluence > 25 && styleInfluence <= 50 && "Gebalanceerd — style prompt + creatieve vrijheid"}
+                        {styleInfluence > 50 && styleInfluence <= 75 && "Sterk gestuurd door style prompt"}
+                        {styleInfluence > 75 && "Maximaal volgens style prompt"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* 5. Style Influence beschrijving */}
                   {selectedArtists.length > 0 && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-medium text-foreground">4. Style Influence</label>
+                        <label className="text-xs font-medium text-foreground">5. Style Influence (tekst)</label>
                         <button
                           onClick={() => copyToClipboard(
                             selectedArtists
