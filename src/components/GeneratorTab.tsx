@@ -848,6 +848,8 @@ export function GeneratorTab() {
   const [songLength, setSongLength] = useState<"standaard" | "kort">("standaard");
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
+  const [lyricFeedback, setLyricFeedback] = useState("");
+  const [revisionCount, setRevisionCount] = useState(0);
 
   const loadSavedOutputs = useCallback(async () => {
     const { data } = await supabase
@@ -1089,9 +1091,13 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
     setTimeout(() => setCopiedField(null), 3000);
   };
 
-  const generateLyrics = async () => {
+  const generateLyrics = async (feedback?: string) => {
     setIsGeneratingLyrics(true);
-    setGeneratedLyrics("");
+    const previousLyrics = feedback ? generatedLyrics : undefined;
+    if (!feedback) {
+      setGeneratedLyrics("");
+      setRevisionCount(0);
+    }
     try {
       const res = await fetch("/api/generate-lyrics", {
         method: "POST",
@@ -1100,10 +1106,14 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
           stylePrompt,
           lyricTemplate: lyricsPrompt,
           songLength,
+          previousLyrics,
+          feedback,
         }),
       });
       const data = await res.json();
       setGeneratedLyrics(data.lyrics || "Geen lyrics ontvangen.");
+      if (feedback) setRevisionCount((c) => c + 1);
+      setLyricFeedback("");
     } catch {
       setGeneratedLyrics("Fout bij het genereren van lyrics. Controleer je API key.");
     }
@@ -1124,6 +1134,8 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
     setSongLength("standaard");
     setShowOutput(false);
     setGeneratedLyrics("");
+    setLyricFeedback("");
+    setRevisionCount(0);
   };
 
   return (
@@ -1676,7 +1688,7 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
                     Opslaan in bibliotheek
                   </button>
                   <button
-                    onClick={generateLyrics}
+                    onClick={() => generateLyrics()}
                     disabled={isGeneratingLyrics}
                     className="flex-1 py-2 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 font-medium rounded-lg border border-blue-900/50 transition-colors text-sm disabled:opacity-50"
                   >
@@ -1694,63 +1706,123 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
                   )}
                 </div>
 
-                {/* Style of Music — max 1000 tekens */}
-                <section className="bg-card border border-accent/30 rounded-lg p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-accent-light">Style of Music (Suno)</h3>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-xs font-mono ${stylePrompt.length > 1000 ? "text-red-400 font-bold" : stylePrompt.length > 800 ? "text-yellow-400" : "text-muted"}`}>
-                        {stylePrompt.length}/1000
-                      </span>
-                      <button
-                        onClick={() => copyToClipboard(stylePrompt, "style")}
-                        className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
-                      >
-                        {copiedField === "style" ? "Gekopieerd!" : "Kopieer"}
-                      </button>
-                    </div>
-                  </div>
-                  {stylePrompt.length > 1000 && (
-                    <div className="mb-2 p-2 bg-red-950/30 border border-red-900/50 rounded text-xs text-red-400">
-                      Te lang! Verwijder instrumenten of artiesten om onder 1000 tekens te komen.
-                    </div>
-                  )}
-                  <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-64">
-                    {stylePrompt}
-                  </pre>
-                </section>
+                {/* Suno velden — elk apart kopieerbaar */}
+                <div className="bg-card border border-accent/30 rounded-lg p-5 space-y-4">
+                  <h3 className="text-sm font-semibold text-accent-light">Suno Invoervelden</h3>
+                  <p className="text-xs text-muted">Elk veld apart kopieerbaar — plak ze in de corresponderende Suno velden.</p>
 
-                {/* Lyrics + Metadata — max 5000 tekens */}
-                <section className="bg-card border border-accent/30 rounded-lg p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-accent-light">Lyrics + Metadata (Suno)</h3>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-xs font-mono ${lyricsPrompt.length > 5000 ? "text-red-400 font-bold" : lyricsPrompt.length > 4000 ? "text-yellow-400" : "text-muted"}`}>
-                        {lyricsPrompt.length}/5000
-                      </span>
+                  {/* 1. Style of Music */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-foreground">1. Style of Music</label>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-mono ${stylePrompt.length > 1000 ? "text-red-400 font-bold" : stylePrompt.length > 800 ? "text-yellow-400" : "text-muted"}`}>
+                          {stylePrompt.length}/1000
+                        </span>
+                        <button
+                          onClick={() => copyToClipboard(stylePrompt, "style")}
+                          className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                        >
+                          {copiedField === "style" ? "Gekopieerd!" : "Kopieer"}
+                        </button>
+                      </div>
+                    </div>
+                    {stylePrompt.length > 1000 && (
+                      <div className="p-2 bg-red-950/30 border border-red-900/50 rounded text-xs text-red-400">
+                        Te lang! Verwijder instrumenten of artiesten om onder 1000 tekens te komen.
+                      </div>
+                    )}
+                    <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-3 border border-border overflow-auto max-h-48">
+                      {stylePrompt}
+                    </pre>
+                  </div>
+
+                  {/* 2. Lyrics + Metadata */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-foreground">2. Lyrics</label>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-mono ${lyricsPrompt.length > 5000 ? "text-red-400 font-bold" : lyricsPrompt.length > 4000 ? "text-yellow-400" : "text-muted"}`}>
+                          {lyricsPrompt.length}/5000
+                        </span>
+                        <button
+                          onClick={() => copyToClipboard(lyricsPrompt, "lyrics")}
+                          className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                        >
+                          {copiedField === "lyrics" ? "Gekopieerd!" : "Kopieer"}
+                        </button>
+                      </div>
+                    </div>
+                    {lyricsPrompt.length > 5000 && (
+                      <div className="p-2 bg-red-950/30 border border-red-900/50 rounded text-xs text-red-400">
+                        Te lang! Verwijder thema&apos;s of woordvoorkeuren om onder 5000 tekens te komen.
+                      </div>
+                    )}
+                    <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-3 border border-border overflow-auto max-h-64">
+                      {lyricsPrompt}
+                    </pre>
+                  </div>
+
+                  {/* 3. Weirdness */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-foreground">3. Weirdness</label>
                       <button
-                        onClick={() => copyToClipboard(lyricsPrompt, "lyrics")}
+                        onClick={() => copyToClipboard(`${weirdness}`, "weirdness")}
                         className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
                       >
-                        {copiedField === "lyrics" ? "Gekopieerd!" : "Kopieer"}
+                        {copiedField === "weirdness" ? "Gekopieerd!" : "Kopieer"}
                       </button>
                     </div>
+                    <div className="flex items-center gap-3 bg-background rounded-lg p-3 border border-border">
+                      <span className="text-lg font-bold text-accent-light">{weirdness}%</span>
+                      <span className="text-xs text-muted">
+                        {weirdness === 0 && "Standaard — veilig, voorspelbaar"}
+                        {weirdness === 10 && "Licht creatief — subtiele verrassingen"}
+                        {weirdness === 20 && "Experimenteel — onverwachte wendingen"}
+                        {weirdness === 30 && "Wild — genre-bending"}
+                      </span>
+                    </div>
                   </div>
-                  {lyricsPrompt.length > 5000 && (
-                    <div className="mb-2 p-2 bg-red-950/30 border border-red-900/50 rounded text-xs text-red-400">
-                      Te lang! Verwijder thema&apos;s of woordvoorkeuren om onder 5000 tekens te komen.
+
+                  {/* 4. Style Influence */}
+                  {selectedArtists.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-medium text-foreground">4. Style Influence</label>
+                        <button
+                          onClick={() => copyToClipboard(
+                            selectedArtists
+                              .map((name) => allArtists.find((a) => a.name === name)?.suno)
+                              .filter(Boolean)
+                              .join("; "),
+                            "influence"
+                          )}
+                          className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                        >
+                          {copiedField === "influence" ? "Gekopieerd!" : "Kopieer"}
+                        </button>
+                      </div>
+                      <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-3 border border-border overflow-auto max-h-32">
+                        {selectedArtists
+                          .map((name) => allArtists.find((a) => a.name === name)?.suno)
+                          .filter(Boolean)
+                          .join("; ")}
+                      </pre>
                     </div>
                   )}
-                  <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-96">
-                    {lyricsPrompt}
-                  </pre>
-                </section>
+                </div>
 
                 {/* Generated Lyrics from ChatGPT */}
                 {(generatedLyrics || isGeneratingLyrics) && (
                   <section className="bg-card border border-blue-900/50 rounded-lg p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-semibold text-blue-400">Gegenereerde Lyrics (ChatGPT)</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-blue-400">Gegenereerde Lyrics (ChatGPT)</h3>
+                        {revisionCount > 0 && (
+                          <span className="text-xs text-blue-400/60">rev. {revisionCount}</span>
+                        )}
+                      </div>
                       {generatedLyrics && (
                         <div className="flex items-center gap-3">
                           <span className={`text-xs font-mono ${generatedLyrics.length > 5000 ? "text-red-400 font-bold" : generatedLyrics.length > 4000 ? "text-yellow-400" : "text-muted"}`}>
@@ -1771,9 +1843,38 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
                         <span className="text-sm text-muted">ChatGPT schrijft lyrics...</span>
                       </div>
                     ) : (
-                      <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-[600px]">
-                        {generatedLyrics}
-                      </pre>
+                      <>
+                        <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-[600px]">
+                          {generatedLyrics}
+                        </pre>
+                        {/* Feedback / revisie */}
+                        <div className="mt-4 space-y-2">
+                          <label className="text-xs text-muted block">Feedback — wat wil je anders?</label>
+                          <textarea
+                            value={lyricFeedback}
+                            onChange={(e) => setLyricFeedback(e.target.value)}
+                            placeholder="Bijv. 'Maak het refrein korter', 'Meer over het gevoel van thuiskomen', 'Verse 2 is te lang', 'Andere hook regel'..."
+                            rows={3}
+                            className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-blue-700 resize-none"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => generateLyrics(lyricFeedback)}
+                              disabled={!lyricFeedback.trim() || isGeneratingLyrics}
+                              className="px-4 py-2 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 font-medium rounded-lg border border-blue-900/50 transition-colors text-sm disabled:opacity-40"
+                            >
+                              Pas aan
+                            </button>
+                            <button
+                              onClick={() => generateLyrics()}
+                              disabled={isGeneratingLyrics}
+                              className="px-4 py-2 bg-card hover:bg-card-hover text-muted font-medium rounded-lg border border-border transition-colors text-sm disabled:opacity-40"
+                            >
+                              Helemaal opnieuw
+                            </button>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </section>
                 )}

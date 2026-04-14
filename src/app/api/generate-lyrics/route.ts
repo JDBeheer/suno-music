@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
   const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
   });
-  const { stylePrompt, lyricTemplate, songLength } = await request.json();
+  const { stylePrompt, lyricTemplate, songLength, previousLyrics, feedback } = await request.json();
 
   const isShort = songLength === "kort";
 
@@ -41,20 +41,35 @@ BELANGRIJK:
 - De output moet DIRECT in Suno geplakt kunnen worden
 - Het totaal (metadata + lyrics) moet ONDER de 5000 tekens blijven`;
 
-  const userPrompt = `Hier is de Style of Music configuratie:
-${stylePrompt}
+  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
+    { role: "system", content: systemPrompt },
+  ];
 
-Hier is het lyric template met metadata tags — vul de lege plekken met lyrics:
-${lyricTemplate}
-
-Schrijf de volledige lyrics met alle metadata tags behouden. Output ALLEEN het ingevulde template, geen uitleg.`;
+  if (previousLyrics && feedback) {
+    // Revision flow: send original context, previous result, and feedback
+    messages.push({
+      role: "user",
+      content: `Hier is de Style of Music configuratie:\n${stylePrompt}\n\nHier is het lyric template met metadata tags — vul de lege plekken met lyrics:\n${lyricTemplate}\n\nSchrijf de volledige lyrics met alle metadata tags behouden. Output ALLEEN het ingevulde template, geen uitleg.`,
+    });
+    messages.push({
+      role: "assistant",
+      content: previousLyrics,
+    });
+    messages.push({
+      role: "user",
+      content: `Pas de lyrics aan op basis van deze feedback:\n\n${feedback}\n\nOutput ALLEEN de aangepaste lyrics met alle [metadata tags] behouden. Geen uitleg.`,
+    });
+  } else {
+    // First generation
+    messages.push({
+      role: "user",
+      content: `Hier is de Style of Music configuratie:\n${stylePrompt}\n\nHier is het lyric template met metadata tags — vul de lege plekken met lyrics:\n${lyricTemplate}\n\nSchrijf de volledige lyrics met alle metadata tags behouden. Output ALLEEN het ingevulde template, geen uitleg.`,
+    });
+  }
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
+    messages,
     temperature: 0.9,
     max_tokens: 2000,
   });
