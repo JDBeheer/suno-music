@@ -358,8 +358,9 @@ function buildStylePrompt(config: GeneratorConfig): string {
     }
   }
 
-  prompt += `[Male Voice Only] [Baritone-Tenor] [Vocal Range: A2-G4]\n`;
+  prompt += `[Male Voice Only] [Baritone-Tenor] [Vocal Range: D3-G4]\n`;
   prompt += `[Warm gritty country baritone, chest voice dominant]\n`;
+  prompt += `[No low bass notes below D3] [Stay in comfortable mid-range]\n`;
 
   if (songLength === "kort") {
     prompt += `[Duration: 2:30-3:15] [Short and punchy] [No extended solos]\n`;
@@ -967,7 +968,7 @@ export function GeneratorTab() {
         categories.map((c) => [c.label, instruments[c.id] || []])
       ),
       weirdness_options: weirdnessOptions.map((w) => ({ percentage: w.id, label: w.label, description: w.description })),
-      vocal_specs: { range: "A2-G4", type: "Baritone-Tenor", style: "Chest voice dominant, warm gritty country baritone, deep southern storytelling tone", constraints: "No falsetto, no belting above G4, must be singable live", note: "Suno blokkeert artiestennamen — gebruik alleen beschrijvingen in de prompt" },
+      vocal_specs: { range: "D3-G4", type: "Baritone-Tenor", style: "Chest voice dominant, warm gritty country baritone, deep southern storytelling tone", constraints: "No falsetto, no belting above G4, must be singable live", note: "Suno blokkeert artiestennamen — gebruik alleen beschrijvingen in de prompt" },
       songwriting_rules: {
         highest_save_rates: "Vaderschap-thema's (gem. 7.9%)",
         best_practice: "Specifieke details > abstracte metaforen — beschrijf wat je ziet, ruikt, hoort",
@@ -1069,7 +1070,7 @@ ${JSON.stringify(optionsJson, null, 2)}
 
 REGELS:
 - Geen IT/coder/developer referenties
-- Zangbereik A2-G4 (warme baritone)
+- Zangbereik D3-G4 (warme baritone)
 - Specifieke details > abstracte metaforen
 - Kwetsbaarheid + kracht = winnende combo
 - Vaderschap-thema's scoren het hoogst (7.9% save rate)
@@ -2033,7 +2034,7 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
                     </li>
                     <li className="flex gap-2">
                       <span className="text-green-400 shrink-0">vocal</span>
-                      Houd zang in A2-G4 range (warme baritone-tenor, comfortabel)
+                      Houd zang in D3-G4 range (warme baritone-tenor, comfortabel)
                     </li>
                     <li className="flex gap-2">
                       <span className="text-accent-light shrink-0">let op</span>

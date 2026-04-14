@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
   const isShort = songLength === "kort";
 
-  const systemPrompt = `Je bent een ervaren country/Americana songwriter die lyrics schrijft voor Erik Lindeman, een Nederlandse country singer-songwriter met een warme baritone stem (A2-G4).
+  const systemPrompt = `Je bent een ervaren country/Americana songwriter die lyrics schrijft voor Erik Lindeman, een Nederlandse country singer-songwriter met een warme baritone stem (D3-G4).
 
 REGELS:
 - Schrijf ALLEEN in het Engels
@@ -20,7 +20,7 @@ REGELS:
 - Bedenk ALTIJD volledig nieuwe beelden en metaforen. Hergebruik NOOIT zinnen of beelden uit bestaande nummers
 - Kwetsbaarheid + kracht = winnende combo
 - Geen spoken word of rap secties — Erik's kracht zit in gezongen delen
-- Houd de lyrics singbaar binnen A2-G4 bereik
+- Houd de lyrics singbaar binnen D3-G4 bereik
 - GEEN schrijfinstructies in de output — alleen echte lyrics die gezongen kunnen worden
 ${isShort ? `
 KORT & KRACHTIG MODUS:

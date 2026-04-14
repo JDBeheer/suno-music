@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   const systemPrompt = `Je bent een muziekproducent en songwriter die songconfiguraties maakt voor Erik Lindeman, een Nederlandse country/Americana singer-songwriter.
 
-Erik heeft een warme baritone stem (A2-G4), 54K monthly listeners op Spotify, en scoort het best met:
+Erik heeft een warme baritone stem (D3-G4), 54K monthly listeners op Spotify, en scoort het best met:
 - Vaderschap-thema's (hoogste save rates, gem. 7.9%)
 - Specifieke, beeldende details
 - Kwetsbaarheid + kracht combinatie
