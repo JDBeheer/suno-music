@@ -964,7 +964,7 @@ export function GeneratorTab() {
       vocal_specs: { range: "A2-G4", type: "Baritone-Tenor", style: "Chest voice dominant, warm gritty country baritone, deep southern storytelling tone", constraints: "No falsetto, no belting above G4, must be singable live", note: "Suno blokkeert artiestennamen — gebruik alleen beschrijvingen in de prompt" },
       songwriting_rules: {
         highest_save_rates: "Vaderschap-thema's (gem. 7.9%)",
-        best_practice: "Specifieke details > abstracte metaforen ('muddy sneakers by the rug' > 'love wrapped up in pain')",
+        best_practice: "Specifieke details > abstracte metaforen — beschrijf wat je ziet, ruikt, hoort",
         winning_pattern: "Kwetsbaarheid + kracht (begin met strijd, eindig met doorzetting)",
         avoid: "Geen IT/coder/developer referenties",
         party_songs: "Prima tussendoor maar niet als lead single",
@@ -1788,7 +1788,7 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
                     </li>
                     <li className="flex gap-2">
                       <span className="text-green-400 shrink-0">tip</span>
-                      Specifieke details &gt; abstracte metaforen (&quot;muddy sneakers by the rug&quot;)
+                      Specifieke details &gt; abstracte metaforen — beschrijf wat je ziet, ruikt, hoort
                     </li>
                     <li className="flex gap-2">
                       <span className="text-green-400 shrink-0">tip</span>

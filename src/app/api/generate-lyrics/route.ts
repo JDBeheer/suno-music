@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
 REGELS:
 - Schrijf ALLEEN in het Engels
 - Geen IT/coder/developer referenties
-- Specifieke, beeldende details > abstracte metaforen ("muddy sneakers by the rug" > "love wrapped up in pain")
+- Gebruik specifieke, beeldende details in plaats van abstracte metaforen. Beschrijf wat je ZIET, RUIKT, HOORT — geen vage gevoelens
+- Bedenk ALTIJD volledig nieuwe beelden en metaforen. Hergebruik NOOIT zinnen of beelden uit bestaande nummers
 - Kwetsbaarheid + kracht = winnende combo
 - Geen spoken word of rap secties — Erik's kracht zit in gezongen delen
 - Houd de lyrics singbaar binnen A2-G4 bereik
