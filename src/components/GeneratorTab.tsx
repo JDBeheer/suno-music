@@ -309,7 +309,7 @@ interface SavedOutput {
   created_at: string;
 }
 
-function buildSunoPrompt(config: {
+interface GeneratorConfig {
   selectedCategories: string[];
   selectedMoods: string[];
   selectedTempos: string[];
@@ -321,34 +321,34 @@ function buildSunoPrompt(config: {
   kept: string[];
   customNotes: string;
   weirdness: number;
-}): string {
-  const { selectedCategories, selectedMoods, selectedTempos, selectedInstruments, selectedThemes, selectedArtists, customTheme, avoided, kept, customNotes, weirdness } = config;
+  freshMode: boolean;
+  songLength: "standaard" | "kort";
+}
+
+// Style of Music prompt — max 1000 tekens voor Suno
+function buildStylePrompt(config: GeneratorConfig): string {
+  const { selectedCategories, selectedMoods, selectedTempos, selectedInstruments, selectedArtists, weirdness, songLength } = config;
 
   const catLabels = selectedCategories.map(
     (id) => categories.find((c) => c.id === id)?.label || id
   );
 
-  // Style of Music line (Suno format)
   const styleGenres = [...catLabels, "Modern Americana", "Country", "Singer-Songwriter"];
   let prompt = `[Style of Music: ${styleGenres.join(", ")}]\n`;
 
-  // Mood
   if (selectedMoods.length > 0) {
     prompt += `[Mood: ${selectedMoods.join(", ")}]\n`;
   }
 
-  // Tempo
   if (selectedTempos.length > 0) {
     const bpms = selectedTempos.map((id) => tempoOptions.find((t) => t.id === id)?.bpm).filter(Boolean);
     prompt += `[Tempo: ${bpms.join(", ")}]\n`;
   }
 
-  // Instruments
   if (selectedInstruments.length > 0) {
     prompt += `[Instruments: ${selectedInstruments.join(", ")}]\n`;
   }
 
-  // Artist inspiration (translated to Suno-safe descriptions)
   if (selectedArtists.length > 0) {
     const artistDescriptions = selectedArtists
       .map((name) => allArtists.find((a) => a.name === name)?.suno)
@@ -358,116 +358,115 @@ function buildSunoPrompt(config: {
     }
   }
 
-  // Vocal specs — comfortable male baritone-tenor range, no artist names (Suno blocks them)
-  prompt += `[Vocal Range: A2-G4] [Male Voice Only] [Baritone-Tenor] [Chest Voice Dominant]\n`;
-  prompt += `[Vocal Style: Warm, gritty country baritone, deep chest voice, southern storytelling tone]\n`;
-  prompt += `[No Falsetto] [No High Belting Above G4] [Comfortable Male Range]\n`;
+  prompt += `[Male Voice Only] [Baritone-Tenor] [Vocal Range: A2-G4]\n`;
+  prompt += `[Warm gritty country baritone, chest voice dominant]\n`;
 
-  // Production
-  prompt += `[Emotional Country Tone] [Singer-Songwriter Feel] [Studio Quality Production]\n`;
-  prompt += `[8-bar Instrumental Intro] [Vocals start after intro]\n`;
-
-  // Category-specific structure tags
-  const primary = selectedCategories[0] || "emotional_ballad";
-  if (primary === "emotional_ballad") {
-    prompt += `[Stripped Acoustic Breakdown] [Soaring Final Chorus]\n`;
-    prompt += `[Short Instrumental Break between 2nd Chorus and Bridge]\n`;
-    prompt += `[Gentle Acoustic Outro with Fiddle Fade]\n`;
-  } else if (primary === "rebel_party") {
-    prompt += `[Extended Instrumental Break - 16 bars] [Guitar Solo Section]\n`;
-    prompt += `[Stomp-Clap Build to Final Chorus]\n`;
-    prompt += `[Outro - 8 bars + Fade]\n`;
-  } else if (primary === "dark_country") {
-    prompt += `[Slow groove] [Dark tone] [Confessional lyrics] [Slow-burning build]\n`;
-    prompt += `[Stripped Bridge] [Melancholy outro with fiddle]\n`;
-  } else if (primary === "country_trap") {
-    prompt += `[Country Flow + Outlaw Rap Groove] [Half-Time Groove]\n`;
-    prompt += `[Big Rock Chorus - Southern Energy]\n`;
-  } else if (primary === "country_rock") {
-    prompt += `[Driving Rhythm] [Power Chorus] [Guitar Solo Mid-song]\n`;
-    prompt += `[Build to Anthemic Final Chorus]\n`;
-  } else if (primary === "country_pop") {
-    prompt += `[Radio-Ready Mix] [Clean Production] [Singable Hook]\n`;
-    prompt += `[Bright Final Chorus with Harmonies]\n`;
-  } else if (primary === "honky_tonk") {
-    prompt += `[Honky Tonk Piano Lead] [Swinging Rhythm] [Two-Step Beat]\n`;
-    prompt += `[Danceable Groove] [Classic Country Feel]\n`;
-  } else if (primary === "bluegrass") {
-    prompt += `[Fast Pickin'] [Acoustic Drive] [Traditional Feel]\n`;
-    prompt += `[Instrumental Breaks with Trading Solos]\n`;
-  } else if (primary === "country_blues") {
-    prompt += `[Blues Progression] [Slide Guitar Lead] [Soulful Groove]\n`;
-    prompt += `[Raw, Organic Feel] [Blues Turnaround]\n`;
-  } else if (primary === "red_dirt") {
-    prompt += `[Gritty Production] [Heavy Acoustic Strum] [Outlaw Energy]\n`;
-    prompt += `[No Polish - Raw and Real]\n`;
-  } else if (primary === "country_metal") {
-    prompt += `[Heavy Distortion] [Double Kick] [Breakdown Section]\n`;
-    prompt += `[Metal Riffs with Country Twang] [Aggressive Build]\n`;
-  } else if (primary === "country_soul") {
-    prompt += `[Warm Production] [Gospel Build] [Smooth Groove]\n`;
-    prompt += `[Horn Section Accents] [Soulful Vocal Runs]\n`;
-  } else if (primary === "comedy_country") {
-    prompt += `[Light-hearted Production] [Playful Arrangement]\n`;
-    prompt += `[Comedic Timing in Instrumental Breaks]\n`;
-  } else if (primary === "acoustic_stripped") {
-    prompt += `[Minimal Production] [Voice + Guitar Focus] [Room Ambience]\n`;
-    prompt += `[No Drums First Half] [Gentle Build]\n`;
-  } else if (primary === "nu_metal_country") {
-    prompt += `[Nu-metal rap-rock with country elements] [Down-tuned heavy guitar riffs]\n`;
-    prompt += `[Rap verses over heavy instrumentals] [Melodic chorus contrast]\n`;
-    prompt += `[DJ scratches and electronic elements] [Country twang guitar breaks]\n`;
-    prompt += `[Aggressive energy with southern soul]\n`;
-  } else if (primary === "industrial_country") {
-    prompt += `[Industrial electronic beats with country storytelling]\n`;
-    prompt += `[Heavy synthesizer bass] [Pounding mechanical rhythms]\n`;
-    prompt += `[Dark atmospheric production] [Processed slide guitar]\n`;
-  } else if (primary === "alt_rock_country") {
-    prompt += `[Alternative rock dynamics - quiet verses, loud choruses]\n`;
-    prompt += `[Atmospheric guitar layers] [Emotional vocal delivery]\n`;
-    prompt += `[Country elements woven through rock foundation]\n`;
+  if (songLength === "kort") {
+    prompt += `[Duration: 2:30-3:15] [Short and punchy] [No extended solos]\n`;
+  } else {
+    prompt += `[Duration: 3:00-4:30] [Keep it concise]\n`;
   }
 
-  prompt += `[Duration: 3:00-4:30] [Maximum 5 minutes] [Keep it concise]\n`;
-  prompt += `[Short Instrumental Breaks - max 8 bars] [No Extended Solos]\n`;
-  prompt += `[Structure: Intro-V1-V2-PreC-Chorus-V3-PreC-Chorus-Bridge-FinalChorus-Outro]\n`;
-  prompt += `[Fade out before 4:30]\n`;
-  prompt += `[Dynamic Shifts: Change energy/tone after 2nd chorus — stripped-back moment before building to climax]\n`;
-  prompt += `[KEY CHANGE: Final chorus must modulate UP by half step or whole step — build anticipation before the shift]\n`;
-  prompt += `[Bridge strips down to create contrast — then final chorus hits in new higher key with full band]\n`;
-  prompt += `[Avoid repetitive AI patterns — vary melody between verses, add human-feel imperfections]\n`;
-
-  // Weirdness
   if (weirdness > 0) {
     prompt += `[Weirdness: ${weirdness}%]\n`;
-  }
-
-  // Theme
-  const allSelectedThemes = [...selectedThemes];
-  if (customTheme.trim()) allSelectedThemes.push(customTheme.trim());
-
-  if (allSelectedThemes.length > 0) {
-    prompt += `\n[Theme: ${allSelectedThemes.join(", ")}]\n`;
-  }
-
-  // Word preferences
-  if (avoided.length > 0) {
-    prompt += `\n[VERMIJD deze woorden: ${avoided.join(", ")}]\n`;
-  }
-
-  if (kept.length > 0) {
-    prompt += `[Trademark woorden (mag terugkomen): ${kept.join(", ")}]\n`;
-  }
-
-  // Extra notes
-  if (customNotes) {
-    prompt += `\n[Extra: ${customNotes}]\n`;
   }
 
   return prompt;
 }
 
-function buildLyricTemplate(category: string): string {
+// Lyrics + metadata prompt — max 5000 tekens voor Suno
+function buildLyricsPrompt(config: GeneratorConfig): string {
+  const { selectedCategories, selectedThemes, customTheme, avoided, kept, customNotes, freshMode, songLength } = config;
+
+  const primary = selectedCategories[0] || "emotional_ballad";
+  let prompt = buildLyricTemplate(primary, songLength);
+
+  // Thema als context bovenaan
+  const allSelectedThemes = [...selectedThemes];
+  if (customTheme.trim()) allSelectedThemes.push(customTheme.trim());
+  if (allSelectedThemes.length > 0) {
+    prompt = `[Theme: ${allSelectedThemes.join(", ")}]\n\n` + prompt;
+  }
+
+  // Woordvoorkeuren alleen als Fresh Mode uit staat
+  if (!freshMode) {
+    if (avoided.length > 0) {
+      prompt += `\n\n[VERMIJD: ${avoided.join(", ")}]`;
+    }
+    if (kept.length > 0) {
+      prompt += `\n[Trademark: ${kept.join(", ")}]`;
+    }
+  }
+
+  if (customNotes) {
+    prompt += `\n\n[Extra: ${customNotes}]`;
+  }
+
+  return prompt;
+}
+
+// Backwards-compatible combined prompt for saving
+function buildSunoPrompt(config: GeneratorConfig): string {
+  return buildStylePrompt(config) + "\n" + buildLyricsPrompt(config);
+}
+
+// Kort & Krachtig templates — 6 secties, strakke structuur
+function buildShortTemplate(category: string): string {
+  const categoryIntros: Record<string, string> = {
+    emotional_ballad: "[4-bar Fingerpicked Guitar] [Soft Start]",
+    rebel_party: "[4-bar Guitar Riff] [Driving Drums]",
+    dark_country: "[4-bar Slide Guitar] [Dark Atmosphere]",
+    country_trap: "[4-bar 808 + Twangy Guitar]",
+    country_rock: "[4-bar Electric Guitar] [Power Drums]",
+    country_pop: "[4-bar Clean Guitar] [Bright Feel]",
+    honky_tonk: "[4-bar Honky Tonk Piano] [Two-Step Beat]",
+    bluegrass: "[4-bar Banjo Pick] [Acoustic Drive]",
+    country_blues: "[4-bar Slide Guitar] [Blues Groove]",
+    red_dirt: "[4-bar Heavy Acoustic Strum] [Gritty]",
+    country_metal: "[4-bar Heavy Riff] [Double Kick]",
+    nu_metal_country: "[4-bar Down-tuned Riff] [Electronic Beat]",
+    industrial_country: "[4-bar Industrial Synth Pulse]",
+    alt_rock_country: "[4-bar Atmospheric Guitar]",
+    country_soul: "[4-bar Warm Piano] [Smooth Groove]",
+    comedy_country: "[4-bar Banjo] [Light Arrangement]",
+    acoustic_stripped: "[4-bar Fingerpicked Guitar]",
+  };
+
+  const intro = categoryIntros[category] || "[4-bar Intro]";
+
+  return `[Intro]
+${intro}
+
+[Verse 1]
+
+
+[Chorus]
+
+
+[Verse 2]
+
+
+[Chorus]
+
+
+[Bridge]
+[Stripped Back] [Build to Final]
+
+
+[Final Chorus]
+[Key Change - Half Step Up] [Full Energy]
+
+
+[Outro]
+[Short Fade]`;
+}
+
+function buildLyricTemplate(category: string, songLength: "standaard" | "kort" = "standaard"): string {
+  // Kort & Krachtig: compacte structuur voor alle categorieën
+  if (songLength === "kort") {
+    return buildShortTemplate(category);
+  }
+
   if (category === "emotional_ballad") {
     return `[Intro]
 [8-bar Fingerpicked Acoustic Guitar] [Fiddle Melody] [Warm Piano]
@@ -845,6 +844,10 @@ export function GeneratorTab() {
   const [savedOutputs, setSavedOutputs] = useState<SavedOutput[]>([]);
   const [showSaved, setShowSaved] = useState(false);
   const [expandedThemeGroup, setExpandedThemeGroup] = useState<string | null>("all");
+  const [freshMode, setFreshMode] = useState(false);
+  const [songLength, setSongLength] = useState<"standaard" | "kort">("standaard");
+  const [generatedLyrics, setGeneratedLyrics] = useState("");
+  const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
 
   const loadSavedOutputs = useCallback(async () => {
     const { data } = await supabase
@@ -873,7 +876,7 @@ export function GeneratorTab() {
     new Set(selectedCategories.flatMap((cat) => instruments[cat] || []))
   );
 
-  const currentConfig = {
+  const currentConfig: GeneratorConfig = {
     selectedCategories,
     selectedMoods,
     selectedTempos,
@@ -885,11 +888,15 @@ export function GeneratorTab() {
     kept,
     customNotes,
     weirdness,
+    freshMode,
+    songLength,
   };
 
+  const stylePrompt = buildStylePrompt(currentConfig);
+  const lyricsPrompt = buildLyricsPrompt(currentConfig);
   const sunoPrompt = buildSunoPrompt(currentConfig);
   const primaryCategory = selectedCategories[0] || "emotional_ballad";
-  const lyricTemplate = buildLyricTemplate(primaryCategory);
+  const lyricTemplate = buildLyricTemplate(primaryCategory, songLength);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -931,8 +938,11 @@ export function GeneratorTab() {
       setCustomNotes(config.customNotes || "");
       setWeirdness(config.weirdness || 0);
       setSelectedArtists(config.selectedArtists || []);
+      setFreshMode(config.freshMode || false);
+      setSongLength(config.songLength || "standaard");
       setShowOutput(false);
       setShowSaved(false);
+      setGeneratedLyrics("");
     } catch (e) {
       console.error("loadConfig error:", e);
     }
@@ -1079,6 +1089,27 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
     setTimeout(() => setCopiedField(null), 3000);
   };
 
+  const generateLyrics = async () => {
+    setIsGeneratingLyrics(true);
+    setGeneratedLyrics("");
+    try {
+      const res = await fetch("/api/generate-lyrics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stylePrompt,
+          lyricTemplate: lyricsPrompt,
+          songLength,
+        }),
+      });
+      const data = await res.json();
+      setGeneratedLyrics(data.lyrics || "Geen lyrics ontvangen.");
+    } catch {
+      setGeneratedLyrics("Fout bij het genereren van lyrics. Controleer je API key.");
+    }
+    setIsGeneratingLyrics(false);
+  };
+
   const clearAll = () => {
     setSelectedCategories([]);
     setSelectedMoods([]);
@@ -1089,7 +1120,10 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
     setCustomTheme("");
     setCustomNotes("");
     setWeirdness(0);
+    setFreshMode(false);
+    setSongLength("standaard");
     setShowOutput(false);
+    setGeneratedLyrics("");
   };
 
   return (
@@ -1513,9 +1547,57 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
               </div>
             </section>
 
-            {/* Weirdness */}
+            {/* Song Length toggle */}
             <section className="bg-card border border-border rounded-lg p-5">
-              <h3 className="text-sm font-semibold text-accent-light mb-3">Suno Weirdness</h3>
+              <h3 className="text-sm font-semibold text-accent-light mb-3">Song Lengte</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setSongLength("kort")}
+                  className={`p-3 rounded-lg border text-left transition-all ${
+                    songLength === "kort"
+                      ? "border-green-500 bg-green-900/20"
+                      : "border-border hover:bg-card-hover"
+                  }`}
+                >
+                  <p className="text-sm font-medium text-foreground">Kort &amp; Krachtig</p>
+                  <p className="text-xs text-muted mt-0.5">2:30-3:15 — 6 secties, pakkend, meezingbaar</p>
+                </button>
+                <button
+                  onClick={() => setSongLength("standaard")}
+                  className={`p-3 rounded-lg border text-left transition-all ${
+                    songLength === "standaard"
+                      ? "border-accent bg-accent/10"
+                      : "border-border hover:bg-card-hover"
+                  }`}
+                >
+                  <p className="text-sm font-medium text-foreground">Standaard</p>
+                  <p className="text-xs text-muted mt-0.5">3:00-4:30 — 10+ secties, uitgebreider</p>
+                </button>
+              </div>
+            </section>
+
+            {/* Fresh Mode + Weirdness */}
+            <section className="bg-card border border-border rounded-lg p-5">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-accent-light">Creativiteit</h3>
+              </div>
+              {/* Fresh Mode toggle */}
+              <button
+                onClick={() => setFreshMode(!freshMode)}
+                className={`w-full p-3 rounded-lg border text-left transition-all mb-3 ${
+                  freshMode
+                    ? "border-yellow-500 bg-yellow-900/20"
+                    : "border-border hover:bg-card-hover"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-foreground">Fresh Mode</p>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded ${freshMode ? "bg-yellow-500/20 text-yellow-400" : "bg-border text-muted"}`}>
+                    {freshMode ? "AAN" : "UIT"}
+                  </span>
+                </div>
+                <p className="text-xs text-muted mt-0.5">Schakelt trademark woorden en catalogus-invloed uit. Schone lei voor nieuwe creativiteit.</p>
+              </button>
               <div className="grid grid-cols-2 gap-2">
                 {weirdnessOptions.map((w) => (
                   <button
@@ -1534,8 +1616,8 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
               </div>
             </section>
 
-            {/* Word preferences */}
-            {(avoided.length > 0 || kept.length > 0) && (
+            {/* Word preferences — hidden in Fresh Mode */}
+            {!freshMode && (avoided.length > 0 || kept.length > 0) && (
               <section className="bg-card border border-border rounded-lg p-5">
                 <h3 className="text-sm font-semibold text-accent-light mb-3">Woordvoorkeuren</h3>
                 {avoided.length > 0 && (
@@ -1585,45 +1667,116 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
           <div className="space-y-6">
             {showOutput ? (
               <>
-                {/* Save button */}
-                <button
-                  onClick={saveOutput}
-                  className="w-full py-2 bg-green-900/30 hover:bg-green-900/50 text-green-400 font-medium rounded-lg border border-green-900/50 transition-colors text-sm"
-                >
-                  Opslaan in bibliotheek
-                </button>
+                {/* Save + Generate Lyrics buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={saveOutput}
+                    className="flex-1 py-2 bg-green-900/30 hover:bg-green-900/50 text-green-400 font-medium rounded-lg border border-green-900/50 transition-colors text-sm"
+                  >
+                    Opslaan in bibliotheek
+                  </button>
+                  <button
+                    onClick={generateLyrics}
+                    disabled={isGeneratingLyrics}
+                    className="flex-1 py-2 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 font-medium rounded-lg border border-blue-900/50 transition-colors text-sm disabled:opacity-50"
+                  >
+                    {isGeneratingLyrics ? "Lyrics genereren..." : "Genereer Lyrics (ChatGPT)"}
+                  </button>
+                </div>
 
-                {/* Suno Prompt */}
+                {/* Status badges */}
+                <div className="flex gap-2 flex-wrap">
+                  {songLength === "kort" && (
+                    <span className="px-2 py-1 text-xs rounded bg-green-900/20 text-green-400 border border-green-900/50">Kort &amp; Krachtig</span>
+                  )}
+                  {freshMode && (
+                    <span className="px-2 py-1 text-xs rounded bg-yellow-900/20 text-yellow-400 border border-yellow-900/50">Fresh Mode</span>
+                  )}
+                </div>
+
+                {/* Style of Music — max 1000 tekens */}
                 <section className="bg-card border border-accent/30 rounded-lg p-5">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-accent-light">Suno Prompt (Style of Music)</h3>
-                    <button
-                      onClick={() => copyToClipboard(sunoPrompt, "suno")}
-                      className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
-                    >
-                      {copiedField === "suno" ? "Gekopieerd!" : "Kopieer"}
-                    </button>
+                    <h3 className="text-sm font-semibold text-accent-light">Style of Music (Suno)</h3>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-mono ${stylePrompt.length > 1000 ? "text-red-400 font-bold" : stylePrompt.length > 800 ? "text-yellow-400" : "text-muted"}`}>
+                        {stylePrompt.length}/1000
+                      </span>
+                      <button
+                        onClick={() => copyToClipboard(stylePrompt, "style")}
+                        className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                      >
+                        {copiedField === "style" ? "Gekopieerd!" : "Kopieer"}
+                      </button>
+                    </div>
                   </div>
+                  {stylePrompt.length > 1000 && (
+                    <div className="mb-2 p-2 bg-red-950/30 border border-red-900/50 rounded text-xs text-red-400">
+                      Te lang! Verwijder instrumenten of artiesten om onder 1000 tekens te komen.
+                    </div>
+                  )}
+                  <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-64">
+                    {stylePrompt}
+                  </pre>
+                </section>
+
+                {/* Lyrics + Metadata — max 5000 tekens */}
+                <section className="bg-card border border-accent/30 rounded-lg p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-accent-light">Lyrics + Metadata (Suno)</h3>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs font-mono ${lyricsPrompt.length > 5000 ? "text-red-400 font-bold" : lyricsPrompt.length > 4000 ? "text-yellow-400" : "text-muted"}`}>
+                        {lyricsPrompt.length}/5000
+                      </span>
+                      <button
+                        onClick={() => copyToClipboard(lyricsPrompt, "lyrics")}
+                        className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
+                      >
+                        {copiedField === "lyrics" ? "Gekopieerd!" : "Kopieer"}
+                      </button>
+                    </div>
+                  </div>
+                  {lyricsPrompt.length > 5000 && (
+                    <div className="mb-2 p-2 bg-red-950/30 border border-red-900/50 rounded text-xs text-red-400">
+                      Te lang! Verwijder thema&apos;s of woordvoorkeuren om onder 5000 tekens te komen.
+                    </div>
+                  )}
                   <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-96">
-                    {sunoPrompt}
+                    {lyricsPrompt}
                   </pre>
                 </section>
 
-                {/* Lyric Template */}
-                <section className="bg-card border border-accent/30 rounded-lg p-5">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-accent-light">Lyric Template (met Suno metadata)</h3>
-                    <button
-                      onClick={() => copyToClipboard(lyricTemplate, "lyric")}
-                      className="px-3 py-1 text-xs bg-accent/20 text-accent-light rounded hover:bg-accent/30 transition-colors"
-                    >
-                      {copiedField === "lyric" ? "Gekopieerd!" : "Kopieer"}
-                    </button>
-                  </div>
-                  <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-[600px]">
-                    {lyricTemplate}
-                  </pre>
-                </section>
+                {/* Generated Lyrics from ChatGPT */}
+                {(generatedLyrics || isGeneratingLyrics) && (
+                  <section className="bg-card border border-blue-900/50 rounded-lg p-5">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-blue-400">Gegenereerde Lyrics (ChatGPT)</h3>
+                      {generatedLyrics && (
+                        <div className="flex items-center gap-3">
+                          <span className={`text-xs font-mono ${generatedLyrics.length > 5000 ? "text-red-400 font-bold" : generatedLyrics.length > 4000 ? "text-yellow-400" : "text-muted"}`}>
+                            {generatedLyrics.length}/5000
+                          </span>
+                          <button
+                            onClick={() => copyToClipboard(generatedLyrics, "generated")}
+                            className="px-3 py-1 text-xs bg-blue-900/20 text-blue-400 rounded hover:bg-blue-900/30 transition-colors"
+                          >
+                            {copiedField === "generated" ? "Gekopieerd!" : "Kopieer"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {isGeneratingLyrics ? (
+                      <div className="flex items-center gap-3 p-4">
+                        <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                        <span className="text-sm text-muted">ChatGPT schrijft lyrics...</span>
+                      </div>
+                    ) : (
+                      <pre className="text-xs text-foreground whitespace-pre-wrap font-mono bg-background rounded-lg p-4 border border-border overflow-auto max-h-[600px]">
+                        {generatedLyrics}
+                      </pre>
+                    )}
+                  </section>
+                )}
 
                 {/* Tips */}
                 <section className="bg-card border border-border rounded-lg p-5">
