@@ -850,6 +850,9 @@ export function GeneratorTab() {
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
   const [lyricFeedback, setLyricFeedback] = useState("");
   const [revisionCount, setRevisionCount] = useState(0);
+  const [showAiSuggest, setShowAiSuggest] = useState(false);
+  const [aiSuggestIdea, setAiSuggestIdea] = useState("");
+  const [isAiSuggesting, setIsAiSuggesting] = useState(false);
 
   const loadSavedOutputs = useCallback(async () => {
     const { data } = await supabase
@@ -1120,6 +1123,47 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
     setIsGeneratingLyrics(false);
   };
 
+  const suggestConfig = async () => {
+    if (!aiSuggestIdea.trim()) return;
+    setIsAiSuggesting(true);
+    try {
+      const availableOptions = {
+        categories: categories.map((c) => ({ id: c.id, label: c.label, description: c.description })),
+        moods: moodOptions.map((m) => m.id),
+        tempos: tempoOptions.map((t) => ({ id: t.id, label: t.label, bpm: t.bpm })),
+        themes: allThemes,
+        artists: allArtists.map((a) => ({ name: a.name, style: a.tooltip })),
+        instruments_per_category: Object.fromEntries(
+          categories.map((c) => [c.id, instruments[c.id] || []])
+        ),
+      };
+      const res = await fetch("/api/suggest-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea: aiSuggestIdea, availableOptions }),
+      });
+      const data = await res.json();
+      if (data.config) {
+        const c = data.config;
+        if (c.categories) setSelectedCategories(c.categories);
+        if (c.moods) setSelectedMoods(c.moods);
+        if (c.tempos) setSelectedTempos(c.tempos);
+        if (c.themes) setSelectedThemes(c.themes);
+        if (c.artists) setSelectedArtists(c.artists);
+        if (c.instruments) setSelectedInstruments(c.instruments);
+        if (c.weirdness !== undefined) setWeirdness(c.weirdness);
+        if (c.songLength) setSongLength(c.songLength);
+        if (c.customTheme) setCustomTheme(c.customTheme);
+        if (c.notes) setCustomNotes(c.notes);
+        setShowAiSuggest(false);
+        setShowOutput(true);
+      }
+    } catch {
+      // silently fail
+    }
+    setIsAiSuggesting(false);
+  };
+
   const clearAll = () => {
     setSelectedCategories([]);
     setSelectedMoods([]);
@@ -1160,6 +1204,14 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
         </button>
         <div className="flex gap-2 ml-auto">
           <button
+            onClick={() => setShowAiSuggest(!showAiSuggest)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              showAiSuggest ? "bg-blue-900/30 text-blue-400 border border-blue-900/50" : "bg-card text-muted hover:text-foreground border border-border"
+            }`}
+          >
+            AI Voorselectie
+          </button>
+          <button
             onClick={() => setShowInspire(!showInspire)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               showInspire ? "bg-purple-900/30 text-purple-400 border border-purple-900/50" : "bg-card text-muted hover:text-foreground border border-border"
@@ -1189,6 +1241,45 @@ Geef ALLEEN de JSON terug, geen uitleg.`;
           </button>
         </div>
       </div>
+
+      {/* AI Voorselectie panel */}
+      {showAiSuggest && (
+        <div className="bg-card border border-blue-900/50 rounded-lg p-5">
+          <h3 className="text-sm font-semibold text-blue-400 mb-2">AI Voorselectie</h3>
+          <p className="text-xs text-muted mb-3">
+            Beschrijf waar je een nummer over wilt maken. ChatGPT kiest automatisch de beste categorie, mood, tempo, instrumenten en meer.
+          </p>
+          <textarea
+            value={aiSuggestIdea}
+            onChange={(e) => setAiSuggestIdea(e.target.value)}
+            placeholder="Bijv. 'Een simpel biertjes-nummer over vrijdagavond met je maten', 'Een emotioneel nummer over je dochter die voor het eerst naar school gaat', 'Een rebel anthem over je eigen pad kiezen'..."
+            rows={3}
+            className="w-full bg-background border border-border rounded-lg px-4 py-2 text-sm text-foreground placeholder-muted focus:outline-none focus:border-blue-700 resize-none"
+          />
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={suggestConfig}
+              disabled={!aiSuggestIdea.trim() || isAiSuggesting}
+              className="px-4 py-2 bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 font-medium rounded-lg border border-blue-900/50 transition-colors text-sm disabled:opacity-40"
+            >
+              {isAiSuggesting ? (
+                <span className="flex items-center gap-2">
+                  <span className="animate-spin h-4 w-4 border-2 border-blue-400 border-t-transparent rounded-full inline-block"></span>
+                  ChatGPT denkt na...
+                </span>
+              ) : (
+                "Vul generator in"
+              )}
+            </button>
+            <button
+              onClick={() => { setShowAiSuggest(false); setAiSuggestIdea(""); }}
+              className="px-4 py-2 text-muted hover:text-foreground text-sm"
+            >
+              Annuleer
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Import panel */}
       {showImport && (
